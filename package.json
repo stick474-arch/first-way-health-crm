@@ -1,0 +1,9 @@
+{
+  "name": "first-way-health-crm",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Client tracking, contact categorization and board of directors management for a small health-services company.",
+  "scripts": {
+    "start": "node tools/serve.mjs"
+  }
+}
