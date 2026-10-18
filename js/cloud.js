@@ -1,6 +1,6 @@
 /* First Way Health CRM — optional Supabase backend: sign-in, team allowlist, record sync and realtime. */
 const Cloud = (() => {
-  const SUPABASE_JS = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js';
+  const SUPABASE_JS = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js';
   const TABLE = 'crm_records';
   const cfg = window.FWH_CONFIG || {};
   const configured = !!(cfg.supabaseUrl && cfg.supabaseAnonKey);

@@ -74,7 +74,7 @@ Why Supabase over Firebase for this app: the data is relational (contacts ↔ or
    insert into public.crm_members (email, role) values ('you@firstwayhealth.com', 'admin');
    ```
 4. **Authentication → URL Configuration**: set *Site URL* to your app URL (e.g. `https://stick474-arch.github.io/first-way-health-crm/`) and add it to *Redirect URLs* (add `http://localhost:5173` too for local testing).
-5. **Project Settings → API**: copy the *Project URL* and the *anon public* key into [`js/config.js`](js/config.js). Never use the `service_role` key in the browser.
+5. **Project Settings → API Keys**: copy the *Project URL* and the *publishable* key (`sb_publishable_…`, or the legacy *anon* key) into [`js/config.js`](js/config.js). Never use a secret / `service_role` key in the browser.
 6. Commit and push. Open the app, choose **Create your account** (or **Email me a sign-in link**) with the allowlisted email, and pick *sample data*, *empty* or *upload what's in this browser*.
 
 Add teammates in **Settings → Team access**; they then create their account with that email. Anyone not on the list can sign up but cannot read or write anything.

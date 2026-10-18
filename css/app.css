@@ -485,8 +485,8 @@ a.kpi:hover { border-color: var(--border-strong); text-decoration: none; }
 
 /* ---- Auth / loading ------------------------------------------------------------------ */
 body.booting .app { visibility: hidden; }
-.auth-screen { position: fixed; inset: 0; z-index: 150; background: var(--bg); display: flex; align-items: center; justify-content: center; padding: 16px; overflow-y: auto; }
-.auth-card { width: 100%; max-width: 420px; padding: 28px; }
+.auth-screen { position: fixed; inset: 0; z-index: 150; background: var(--bg); display: flex; padding: 16px; overflow-y: auto; }
+.auth-card { width: 100%; max-width: 420px; padding: 28px; margin: auto; }
 .auth-card .brand { padding: 0 0 18px; }
 .auth-card h1 { font-size: 22px; margin-bottom: 4px; }
 .auth-card .form-grid { margin-top: 16px; }
