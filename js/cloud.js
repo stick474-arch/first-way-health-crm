@@ -145,7 +145,7 @@ const Cloud = (() => {
       el.className = 'auth-screen';
       el.innerHTML = `
         <div class="auth-card card">
-          <div class="brand"><div class="brand-mark" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true"><defs><linearGradient id="authStar" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#9a5a18"/><stop offset="0.35" stop-color="#ff9900"/><stop offset="0.55" stop-color="#ffc266"/><stop offset="1" stop-color="#7a4512"/></linearGradient></defs><rect width="120" height="120" rx="28" fill="#0e1b3d"/><path d="M60 26 L92 98 L80 98 L60 50 L40 98 L28 98 Z" fill="url(#authStar)"/><path d="M100 66 A44 11 -12 0 1 20 82" fill="none" stroke="#4fb8c6" stroke-width="4" stroke-linecap="round"/><path d="M60 10 Q61.5 24.5 72 26 Q61.5 27.5 60 42 Q58.5 27.5 48 26 Q58.5 24.5 60 10 Z" fill="#ffffff" stroke="#0e1b3d" stroke-width="2" paint-order="stroke"/></svg></div>
+          <div class="brand"><div class="brand-mark" aria-hidden="true"><svg viewBox="0 0 240 240" aria-hidden="true"><defs><linearGradient id="authStar" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#9a5a18"/><stop offset="0.35" stop-color="#ff9900"/><stop offset="0.55" stop-color="#ffc266"/><stop offset="1" stop-color="#7a4512"/></linearGradient><clipPath id="authStarC"><rect width="240" height="240" rx="54"/></clipPath></defs><rect width="240" height="240" rx="54" fill="#0e1b3d"/><g clip-path="url(#authStarC)"><path d="M120 120 L120 14 L106 106 Z M120 120 L226 120 L134 106 Z M120 120 L120 226 L106 134 Z M120 120 L14 120 L106 134 Z" fill="#22345a"/><path d="M120 120 L120 14 L134 106 Z M120 120 L226 120 L134 134 Z M120 120 L120 226 L134 134 Z M120 120 L14 120 L106 106 Z" fill="#16264d"/><path d="M24.9 173.7 A98 26 -14 0 1 215.1 126.3" fill="none" stroke="#4fb8c6" stroke-width="6" opacity="0.4"/><path d="M120 40 L188 206 L162 206 L120 98 L78 206 L52 206 Z" fill="url(#authStar)"/><circle cx="120" cy="40" r="14" fill="#0e1b3d"/><path d="M120 12 Q122.4 37.6 140 40 Q122.4 42.4 120 68 Q117.6 42.4 100 40 Q117.6 37.6 120 12 Z" fill="#ffffff"/><path d="M215.1 126.3 A98 26 -14 0 1 24.9 173.7" fill="none" stroke="#6ccad6" stroke-width="10" stroke-linecap="round"/><circle cx="40.8" cy="183.1" r="9" fill="#ff9900"/></g></svg></div>
             <div class="brand-text"><strong><span class="gold-a">A</span><span class="gold-rest">etherium</span></strong><span>CRM &amp; Board</span></div></div>
           <h1>Sign in</h1>
           <p class="muted">Use your work email. Only people on the team list can see the data.</p>
@@ -254,9 +254,35 @@ const Cloud = (() => {
       console.error(e);
       loadingScreen('');
       setStatus('error', e.message || String(e));
-      UI.toast(`Cloud connection failed: ${e.message || e}. Working locally in this browser.`, 'error', { duration: 9000 });
-      return 'local';
+      // Production never falls back to data saved in this browser: that is how demo data leaked in.
+      return unavailableScreen(e.message || String(e));
     }
+  }
+
+  function unavailableScreen(reason) {
+    const el = document.createElement('div');
+    el.className = 'auth-screen';
+    el.innerHTML = `
+      <div class="auth-card card">
+        <div class="brand"><div class="brand-text"><strong><span class="gold-a">A</span><span class="gold-rest">etherium</span></strong><span>CRM &amp; Board</span></div></div>
+        <h1>Can't open the team workspace</h1>
+        <p class="muted">${esc(reason)}</p>
+        <p class="muted small">Nothing was loaded from this browser, so no demo or old data is mixed in. Fix the issue and try again.</p>
+        <div class="row wrap" style="margin-top:16px">
+          <button class="btn btn-primary" type="button" data-u="retry">Try again</button>
+          ${user ? '<button class="btn" type="button" data-u="signout">Sign out</button>' : ''}
+        </div>
+        <hr>
+        <a class="btn btn-ghost btn-block" href="demo/">Open the demo instead (fictional data)</a>
+      </div>`;
+    document.body.appendChild(el);
+    el.addEventListener('click', async (e) => {
+      const b = e.target.closest('[data-u]');
+      if (!b) return;
+      if (b.dataset.u === 'signout' && client) await client.auth.signOut();
+      location.reload();
+    });
+    return new Promise(() => {}); // stays here until the person retries
   }
 
   async function signOut() {
