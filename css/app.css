@@ -24,8 +24,8 @@
   --abyss: #070e22;
   --on-void: #e8eef4;
   --lumen: #e3a93b;
-  --gold-1: #4e3a16; --gold-2: #8a6a2f; --gold-3: #c9a55c; --gold-4: #f0d99a;
-  --gold: linear-gradient(160deg, #5e461b 0%, #9c7a3c 22%, #f0d99a 45%, #c9a55c 58%, #8a6a2f 78%, #4e3a16 100%);
+  --gold-1: #4e2f0e; --gold-2: #9a5a18; --gold-3: #e88a1a; --gold-4: #ffc266;
+  --gold: linear-gradient(160deg, #5a340f 0%, #a8641e 20%, #ff9900 40%, #ffc266 50%, #e08a1e 64%, #8a4f14 82%, #4e2f0e 100%);
   --shadow-1: 0 1px 2px rgba(16, 24, 40, .05), 0 1px 3px rgba(16, 24, 40, .06);
   --shadow-2: 0 8px 24px rgba(16, 24, 40, .12), 0 2px 6px rgba(16, 24, 40, .06);
   --radius: 10px;
@@ -45,7 +45,7 @@
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --bg: #0a111b; --surface: #121c2a; --surface-2: #18243a; --surface-3: #1f2d45; --border: #24324a; --border-strong: #31425e;
-    --text: #e8eef4; --text-2: #b9c4d1; --muted: #9daaba; --void: #1c2c5a; --abyss: #050a18; --lumen: #f0bd5a; --gold: linear-gradient(160deg, #a8873f 0%, #f0d99a 40%, #d9b66a 62%, #b08d4a 100%);
+    --text: #e8eef4; --text-2: #b9c4d1; --muted: #9daaba; --void: #1c2c5a; --abyss: #050a18; --lumen: #f0bd5a; --gold: linear-gradient(160deg, #c47a1e 0%, #ff9900 35%, #ffc266 50%, #f5a623 66%, #c27022 100%);
     --primary: #6ccad6; --primary-strong: #8fdae3; --primary-soft: #11303a; --on-primary: #06141a;
     --danger: #f0716a; --danger-soft: #3a1d1c; --warning: #f0b14a; --warning-soft: #392b14; --success: #4fc483; --success-soft: #15321f;
     --focus: 0 0 0 3px rgba(108, 202, 214, .35);
@@ -57,7 +57,7 @@
 }
 :root[data-theme="dark"] {
   --bg: #0a111b; --surface: #121c2a; --surface-2: #18243a; --surface-3: #1f2d45; --border: #24324a; --border-strong: #31425e;
-  --text: #e8eef4; --text-2: #b9c4d1; --muted: #9daaba; --void: #1c2c5a; --abyss: #050a18; --lumen: #f0bd5a; --gold: linear-gradient(160deg, #a8873f 0%, #f0d99a 40%, #d9b66a 62%, #b08d4a 100%);
+  --text: #e8eef4; --text-2: #b9c4d1; --muted: #9daaba; --void: #1c2c5a; --abyss: #050a18; --lumen: #f0bd5a; --gold: linear-gradient(160deg, #c47a1e 0%, #ff9900 35%, #ffc266 50%, #f5a623 66%, #c27022 100%);
   --primary: #6ccad6; --primary-strong: #8fdae3; --primary-soft: #11303a; --on-primary: #06141a;
   --danger: #f0716a; --danger-soft: #3a1d1c; --warning: #f0b14a; --warning-soft: #392b14; --success: #4fc483; --success-soft: #15321f;
   --focus: 0 0 0 3px rgba(108, 202, 214, .35);
@@ -160,8 +160,8 @@ kbd { font: 11px var(--mono); padding: 1px 5px; border: 1px solid var(--border-s
 .btn-primary { background: linear-gradient(180deg, color-mix(in srgb, var(--primary) 82%, #ffffff) 0%, var(--primary) 55%); border-color: var(--primary); color: var(--on-primary); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .18), 0 1px 2px rgba(7, 14, 34, .18); }
 .btn-primary:hover { background: var(--primary-strong); border-color: var(--primary-strong); color: var(--on-primary); }
 /* Brand: deep void with an aged-gold edge (the "+ New" button: one gold moment per screen) */
-.btn-brand { background: var(--void); color: var(--gold-4); border: 1px solid var(--gold-2); box-shadow: inset 0 1px 0 rgba(240, 217, 154, .18), 0 1px 3px rgba(7, 14, 34, .35); }
-.btn-brand:hover { background: var(--abyss); color: #fff4d2; border-color: var(--gold-3); }
+.btn-brand { background: var(--void); color: var(--gold-4); border: 1px solid var(--gold-2); box-shadow: inset 0 1px 0 rgba(255, 194, 102, .2), 0 1px 3px rgba(7, 14, 34, .35); }
+.btn-brand:hover { background: var(--abyss); color: #ffe2b0; border-color: var(--gold-3); }
 .btn-brand .ic { color: var(--gold-3); }
 .btn-danger:hover { color: #fff; }
 .btn-danger-ghost:hover, .btn-ghost:hover { border-color: transparent; }
