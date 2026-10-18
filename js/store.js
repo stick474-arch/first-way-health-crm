@@ -55,7 +55,26 @@ const Store = (() => {
 
   // ---- Board -----------------------------------------------------------------------------
   const BOARD_ROLES = ['Chair', 'Vice Chair', 'Director', 'Independent Director', 'Secretary', 'Treasurer', 'Observer', 'Advisor'];
-  const MEETING_TYPES = ['Regular', 'Special', 'Annual', 'Committee'];
+  const MEETING_TYPES = ['Inaugural', 'Regular', 'Special', 'Annual', 'Committee'];
+  // The founding board's first meeting: who we are, who leads, how we will work.
+  const INAUGURAL_AGENDA = [
+    { title: 'Welcome, call to order & attendance', kind: 'Information', minutes: 5 },
+    { title: 'Confirm the founding board: members, roles and terms', kind: 'Decision', minutes: 10 },
+    { title: 'Appoint the Chair and the Secretary', kind: 'Decision', minutes: 10 },
+    { title: 'How we work: meeting cadence, quorum, conflict-of-interest policy', kind: 'Decision', minutes: 15 },
+    { title: 'Vision, first clients and the 90-day plan', kind: 'Discussion', minutes: 25 },
+    { title: 'Banking, initial budget and signatories', kind: 'Decision', minutes: 15 },
+    { title: 'Action items, owners and the date of the next meeting', kind: 'Information', minutes: 10 },
+    { title: 'Adjournment', kind: 'Information', minutes: 0 },
+  ];
+  const INAUGURAL_RESOLUTIONS = [
+    'Confirm the founding board: its members, roles and terms',
+    'Appoint the Chair of the Board',
+    'Appoint the Secretary of the Board',
+    'Adopt a quarterly meeting cadence and a simple-majority quorum',
+    'Adopt a conflict-of-interest disclosure policy for directors',
+    'Designate the Aetherium workspace as the official record of minutes and resolutions',
+  ];
   const MEETING_STATUS = ['Scheduled', 'Held', 'Minutes approved', 'Cancelled'];
   const AGENDA_KINDS = ['Information', 'Discussion', 'Decision'];
   const RESOLUTION_STATUS = ['Proposed', 'Approved', 'Rejected', 'Tabled', 'Withdrawn'];
@@ -409,7 +428,7 @@ const Store = (() => {
   return {
     GROUPS, CONTACT_TYPES, ORG_TYPES, ORG_SIZES, PRIORITIES, STAGES, LOST_REASONS, ACTIVITY_TYPES, TASK_KINDS,
     TASK_PRIORITIES, BOARD_ROLES, MEETING_TYPES, MEETING_STATUS, AGENDA_KINDS, RESOLUTION_STATUS, RESOLUTION_METHODS,
-    STANDARD_AGENDA, TAG_COLORS, COLLECTIONS, PREFIX,
+    STANDARD_AGENDA, INAUGURAL_AGENDA, INAUGURAL_RESOLUTIONS, TAG_COLORS, COLLECTIONS, PREFIX,
     get settings() { return db.settings; },
     get firstRun() { return firstRun; },
     set firstRun(v) { firstRun = v; },

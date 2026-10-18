@@ -207,7 +207,7 @@ const App = (() => {
 
   // ---- Roles: viewers get a read-only UI (the database enforces it too) -------------------
   const WRITE_ACTS = new Set(['logActivity', 'toggleTask', 'moveDeal', 'contactMore', 'setAtt', 'attAll', 'agAdd', 'agDelete', 'agMove',
-    'minutesDraft', 'mtgStatus', 'saveLists', 'loadSample', 'eraseAll', 'removeMember']);
+    'minutesDraft', 'mtgStatus', 'startInaugural', 'saveLists', 'loadSample', 'eraseAll', 'removeMember']);
   const isWriteAction = (act) => /^(new|edit)/.test(act) || WRITE_ACTS.has(act);
 
   function lockViewForViewers() {

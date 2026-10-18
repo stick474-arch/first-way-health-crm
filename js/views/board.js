@@ -86,8 +86,9 @@ Views.board = (() => {
       ${head('Governance in one place: members, meetings, decisions and follow-through')}
       ${tabs('overview')}
       ${banners.join('')}
-      ${!members.length ? `<div class="card">${UI.empty('landmark', 'Set up your board', 'Add your directors and advisors with their roles, committees and terms. Then schedule meetings, record attendance, minutes, resolutions and action items.',
-        '<button class="btn btn-primary" data-act="newContact" data-type="Board Member">Add a board member</button> <button class="btn" data-act="newContact" data-type="Advisor">Add an advisor</button>')}</div>` : ''}
+      ${!members.length ? `<div class="card">${UI.empty('landmark', 'Set up our board', 'Start with the founding board: the people who govern the company. A name, a seat and a term are enough; you can add the rest later.',
+        '<button class="btn btn-primary" data-act="newBoardMember" data-type="Board Member">Add a director</button> <a class="btn" href="#/board/members">Add from the team</a>')}</div>` : ''}
+      ${inauguralCta(members)}
       <div class="kpis">
         <a class="card kpi" href="#/board/members"><span class="kpi-label">${UI.icon('users')}Voting directors</span><span class="kpi-value">${voting.length}</span><span class="kpi-sub">${independent} independent · ${members.length - voting.length} advisors/observers</span></a>
         <a class="card kpi" href="${next ? `#/board/meetings/${next.id}` : '#/board/meetings'}"><span class="kpi-label">${UI.icon('calendar')}Next meeting</span><span class="kpi-value">${next ? esc(U.daysFromToday(next.date) === 0 ? 'Today' : `${U.daysFromToday(next.date)}d`) : '—'}</span><span class="kpi-sub">${next ? esc(`${next.title} · ${U.fmtDate(next.date)}`) : 'none scheduled'}</span></a>
@@ -125,35 +126,76 @@ Views.board = (() => {
       </div>`;
   }
 
+  // ---- Inaugural meeting -----------------------------------------------------------------
+  function inauguralCta(members) {
+    if (!members.length || S.all('meetings').some((m) => m.type === 'Inaugural')) return '';
+    if (S.pastMeetings().some((m) => m.status === 'Held' || m.status === 'Minutes approved')) return '';
+    const voting = members.filter(S.isVoting).length;
+    return `<div class="card" style="margin-bottom:16px; background: var(--void); color: var(--on-void); border-color: var(--void);">
+      <div class="card-body" style="padding:20px; display:flex; gap:20px; align-items:center; flex-wrap:wrap;">
+        <div style="flex:1; min-width:260px;">
+          <div style="font-family:var(--display); font-size:18px; font-weight:600; margin-bottom:6px;">Hold our inaugural board meeting</div>
+          <div style="opacity:.8; font-size:14px; line-height:1.5;">One click prepares today's meeting: an agenda for a founding board (roles, how we work, the 90-day plan, banking) and ${S.INAUGURAL_RESOLUTIONS.length} draft resolutions to vote on. ${U.plural(members.length, 'member')}, ${voting} voting.</div>
+        </div>
+        <button class="btn btn-brand" data-act="startInaugural">${UI.icon('landmark')}Prepare today's meeting</button>
+      </div>
+    </div>`;
+  }
+
   // ---- Members ---------------------------------------------------------------------------
+  let accessList = null; // Supabase team access, loaded once per page load
   function members(root) {
     const list = S.boardMembers({ includeFormer: state.showFormer });
-    const former = S.boardMembers({ includeFormer: true }).length - S.boardMembers().length;
+    const all = S.boardMembers({ includeFormer: true });
+    const former = all.length - S.boardMembers().length;
+    const lower = (s) => (s || '').toLowerCase();
+    const userFor = (c) => S.all('users').find((u) => (c.email && lower(u.email) === lower(c.email)) || lower(u.name) === lower(S.contactName(c))) || null;
+    const onBoard = (email, name) => all.some((c) => (email && lower(c.email) === lower(email)) || (name && lower(S.contactName(c)) === lower(name)));
+    const candidates = S.all('users').filter((u) => !onBoard(u.email, u.name)).map((u) => ({ name: u.name, email: u.email || '', from: u.role ? `Team · ${u.role}` : 'Team member' }));
+    if (S.mode === 'cloud') {
+      if (accessList === null) { accessList = []; Cloud.listMembers().then((l) => { accessList = l; App.rerender(); }).catch(() => {}); }
+      accessList.filter((m) => !onBoard(m.email) && !candidates.some((x) => lower(x.email) === m.email))
+        .forEach((m) => candidates.push({ name: '', email: m.email, from: `Has app access · ${m.role}` }));
+    }
     root.innerHTML = `
-      ${head('Directors, advisors and observers — roles, committees, terms and attendance')}
+      ${head('The people who govern the company: seats, terms, attendance and follow-through')}
       ${tabs('members')}
+      ${inauguralCta(S.boardMembers())}
       <div class="row wrap" style="margin-bottom:14px">
-        <button class="btn btn-primary" data-act="newContact" data-type="Board Member" data-navigate="no">${UI.icon('plus')}Add board member</button>
-        <button class="btn" data-act="newContact" data-type="Advisor" data-navigate="no">${UI.icon('plus')}Add advisor</button>
-        ${former ? `<label class="check" style="margin-left:auto"><input type="checkbox" id="showFormer" ${state.showFormer ? 'checked' : ''}> <span>Show ${U.plural(former, 'former member')}</span></label>` : ''}
+        <h2 style="font-size:17px; margin:0;">Our board <span class="muted" style="font-weight:500;">· ${list.length}</span></h2>
+        <span class="spacer"></span>
+        ${former ? `<label class="check"><input type="checkbox" id="showFormer" ${state.showFormer ? 'checked' : ''}> <span>Show ${U.plural(former, 'former member')}</span></label>` : ''}
+        <button class="btn" data-act="newBoardMember" data-type="Advisor">${UI.icon('plus')}Advisor</button>
+        <button class="btn btn-primary" data-act="newBoardMember" data-type="Board Member">${UI.icon('plus')}Director</button>
       </div>
+      ${candidates.length ? `<div class="card" style="margin-bottom:16px;">
+        <div class="card-head"><h3>Already on the team? Bring them onto the board</h3><span class="sub">${U.plural(candidates.length, 'person', 'people')}</span></div>
+        <div class="card-body flush"><div class="list">${candidates.map((p) => `<div class="list-item">
+          ${UI.avatar(p.name || p.email, 'sm')}
+          <div class="li-main"><b>${esc(p.name || p.email)}</b><small>${esc([p.name ? p.email : '', p.from].filter(Boolean).join(' · '))}</small></div>
+          <div class="li-side"><button class="btn btn-sm" data-act="newBoardMember" data-type="Board Member" data-name="${esc(p.name)}" data-email="${esc(p.email)}">${UI.icon('plus')}Add to board</button></div>
+        </div>`).join('')}</div></div>
+      </div>` : ''}
       ${list.length ? `<div class="members">${list.map((c) => {
         const b = c.board || {};
         const att = S.attendanceRate(c.id);
-        const h = S.health(c);
+        const user = userFor(c);
+        const owners = [c.id, user?.id].filter(Boolean);
+        const myActions = boardTasks().filter((t) => t.status !== 'done' && owners.includes(t.ownerId));
+        const overdue = myActions.filter((t) => t.due && U.daysFromToday(t.due) < 0).length;
         return `<div class="card member">
           <div class="member-top">${UI.avatar(S.contactName(c), 'lg')}<div><b><a href="#/contacts/${c.id}">${esc(S.contactName(c))}</a></b><small>${esc(b.role || c.type)}${c.title ? ` · ${esc(c.title)}` : ''}</small></div></div>
-          <div class="row wrap">${S.isVoting(c) ? UI.badge('Voting', 'teal') : UI.badge(c.type === 'Advisor' ? 'Advisor' : 'Non-voting', 'cyan')}${b.independent ? UI.badge('Independent', 'blue') : ''}${(b.committees || []).map((x) => UI.badge(x, 'slate')).join('')}</div>
+          <div class="row wrap">${S.isVoting(c) ? UI.badge('Votes', 'teal') : UI.badge(c.type === 'Advisor' ? 'Advisor' : 'Non-voting', 'cyan')}${user ? UI.badge('Team', 'green') : ''}${b.independent ? UI.badge('Independent', 'blue') : ''}${(b.committees || []).map((x) => UI.badge(x, 'slate')).join('')}</div>
           ${termInfo(c).html}
-          <div class="row">${UI.icon('userCheck', 'ic-sm')} Attendance: ${att ? `<b>${att.pct}%</b> <span class="muted">(${att.present}/${att.total})</span>` : '<span class="muted">no meetings yet</span>'}</div>
-          <div class="row"><span class="health health-${h.status}">${UI.healthDot(h)}${esc(h.last ? `Last contact ${U.relDays(h.last)}` : 'No interactions logged')}</span></div>
+          <div class="row">${UI.icon('userCheck', 'ic-sm')} Meetings: ${att ? `<b>${att.pct}%</b> <span class="muted">attended (${att.present}/${att.total})</span>` : '<span class="muted">none held yet</span>'}</div>
+          <div class="row">${UI.icon('checkSquare', 'ic-sm')} Action items: ${myActions.length ? `<b>${myActions.length} open</b>${overdue ? ` <span class="due-over">· ${overdue} overdue</span>` : ''}` : '<span class="muted">none open</span>'}</div>
           ${b.coi ? `<div class="row small" title="${esc(b.coi)}">${UI.icon('shield', 'ic-sm')} Conflict of interest on file</div>` : ''}
           <div class="member-actions">
-            <button class="btn btn-sm" data-act="logActivity" data-contact="${c.id}">${UI.icon('phone')}Log interaction</button>
-            <button class="btn btn-sm btn-ghost" data-act="editContact" data-id="${c.id}">${UI.icon('edit')}Edit</button>
+            <button class="btn btn-sm" data-act="newTask" data-kind="Board action" data-owner="${user?.id || c.id}">${UI.icon('plus')}Assign action</button>
+            <button class="btn btn-sm btn-ghost" data-act="editBoardMember" data-id="${c.id}">${UI.icon('edit')}Edit seat</button>
           </div>
         </div>`;
-      }).join('')}</div>` : `<div class="card">${UI.empty('users', 'No board members yet', 'Add directors (voting) and advisors (non-voting). Contacts with type Board Member or Advisor appear here automatically.')}</div>`}`;
+      }).join('')}</div>` : (candidates.length ? '' : `<div class="card">${UI.empty('users', 'No one on the board yet', 'Add the founding directors: a name, a seat and a term are enough.')}</div>`)}`;
     root.onchange = (e) => { if (e.target.id === 'showFormer') { state.showFormer = e.target.checked; App.rerender(); } };
   }
 
@@ -164,6 +206,7 @@ Views.board = (() => {
     root.innerHTML = `
       ${head('Agenda, attendance, quorum, minutes, resolutions and action items per meeting')}
       ${tabs('meetings')}
+      ${inauguralCta(S.boardMembers())}
       <div class="stack">
         <div class="card"><div class="card-head"><h2>Upcoming</h2><span class="sub">${upcoming.length}</span></div>
           <div class="card-body flush"><div class="list">${upcoming.map(meetingItem).join('') || `<div class="empty-sm">No meetings scheduled. <a href="#" data-act="newMeeting">Schedule one</a>.</div>`}</div></div></div>
@@ -412,6 +455,24 @@ Views.board = (() => {
     render,
     actions: {
       setActView: (ds) => { state.actView = ds.v; App.rerender(); },
+      startInaugural: () => {
+        const hour = String(new Date().getHours()).padStart(2, '0');
+        const chair = S.boardMembers().find((c) => c.board?.role === 'Chair');
+        const lead = S.currentUser()?.name || '';
+        const agenda = S.INAUGURAL_AGENDA.map((a, i) => ({
+          ...a, id: U.uid('agi'), presenter: i === 4 ? lead : (chair && (i === 0 || i === 6) ? S.contactName(chair) : ''),
+        }));
+        const m = S.upsert('meetings', {
+          title: 'Inaugural Board Meeting', type: 'Inaugural', committee: '', date: `${U.today()}T${hour}:00`, durationMin: 90,
+          location: '', status: 'Scheduled', agenda, attendance: {}, minutes: '',
+        }, { silent: true });
+        S.INAUGURAL_RESOLUTIONS.forEach((title) => S.upsert('resolutions', {
+          number: S.nextResolutionNumber(U.today()), title, description: '', meetingId: m.id, method: 'Meeting vote',
+          date: U.today(), status: 'Proposed', votesFor: 0, votesAgainst: 0, abstain: 0,
+        }, { silent: true }));
+        location.hash = `#/board/meetings/${m.id}`;
+        UI.toast('Inaugural meeting ready. Mark attendance, then work through the agenda.', 'success', { duration: 6000 });
+      },
       exportResolutions,
       printMinutes,
       setAtt: (ds) => withMeeting(ds, (m) => {

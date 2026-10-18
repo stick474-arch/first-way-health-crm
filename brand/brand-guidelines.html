@@ -1,0 +1,398 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Aetherium · Brand Guidelines</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;500;600;700&family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+  @page { size: A4; margin: 0; }
+  :root {
+    --abyss: #070e22; --void: #0e1b3d; --line-dark: #1b2a52; --aether: #2f8f9d; --aether-strong: #1f6f7c; --starlight: #9fe3ec;
+    --lumen: #e3a93b; --amber: #ff9900; --glint: #ffc266; --bronze: #c46f16; --patina: #4e2f0e; --old-gold: #c9a55c;
+    --surface: #f4f6f8; --ink: #0f1a2a; --ink-muted: #4f5d6e; --line: #d9e0e7; --on-void: #e8eef4; --muted-dark: #9daaba;
+    --display: "Unbounded", "Segoe UI", sans-serif; --sans: "Instrument Sans", "Segoe UI", sans-serif; --mono: "JetBrains Mono", Consolas, monospace;
+    --amber-grad: linear-gradient(160deg, #5a340f 0%, #a8641e 20%, #ff9900 40%, #ffc266 50%, #e08a1e 64%, #8a4f14 82%, #4e2f0e 100%);
+    --old-grad: linear-gradient(160deg, #9c7a3c 0%, #f0d99a 42%, #c9a55c 64%, #8a6a2f 100%);
+  }
+  * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  html, body { margin: 0; background: #ffffff; color: var(--ink); font-family: var(--sans); }
+  .page { width: 210mm; height: 297mm; position: relative; overflow: hidden; page-break-after: always; break-after: page; display: flex; flex-direction: column; padding: 18mm 18mm 14mm; }
+  .page:last-child { page-break-after: auto; break-after: auto; }
+  .dark { background: var(--abyss); color: var(--on-void); }
+  .eyebrow { font-family: var(--mono); font-size: 8.5pt; letter-spacing: .16em; text-transform: uppercase; color: var(--ink-muted); }
+  .dark .eyebrow { color: var(--muted-dark); }
+  h1 { font-family: var(--display); font-weight: 600; font-size: 30pt; line-height: 1.05; letter-spacing: -.02em; margin: 6mm 0 4mm; text-wrap: balance; }
+  h2 { font-family: var(--display); font-weight: 500; font-size: 13pt; letter-spacing: -.01em; margin: 0 0 3mm; }
+  p { font-size: 10.5pt; line-height: 1.55; margin: 0 0 3mm; max-width: 150mm; }
+  .muted { color: var(--ink-muted); }
+  .dark .muted { color: var(--muted-dark); }
+  .foot { margin-top: auto; display: flex; justify-content: space-between; font-family: var(--mono); font-size: 7.5pt; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-muted); padding-top: 4mm; border-top: 1px solid var(--line); }
+  .dark .foot { color: var(--muted-dark); border-top-color: var(--line-dark); }
+  .grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6mm; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5mm; }
+  .panel { border: 1px solid var(--line); border-radius: 3mm; padding: 6mm; }
+  .panel.dark { border-color: var(--line-dark); }
+  .label { font-family: var(--mono); font-size: 7.5pt; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-muted); }
+  .dark .label { color: var(--muted-dark); }
+  ul { margin: 0; padding-left: 4.5mm; font-size: 10pt; line-height: 1.55; }
+  li { margin-bottom: 1.2mm; }
+  .gold-a { background: var(--amber-grad); -webkit-background-clip: text; background-clip: text; color: transparent; font-weight: 700; }
+  .gold-rest { background: var(--old-grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .swatch { border-radius: 2.5mm; overflow: hidden; border: 1px solid var(--line); }
+  .swatch .chip { height: 22mm; }
+  .swatch .meta { padding: 2.5mm 3mm; font-size: 8.5pt; line-height: 1.45; }
+  .swatch b { display: block; font-size: 9.5pt; }
+  .swatch code { font-family: var(--mono); font-size: 7.5pt; color: var(--ink-muted); }
+  .rule { display: grid; grid-template-columns: 6mm minmax(0, 1fr); gap: 2mm; font-size: 9.5pt; line-height: 1.45; margin-bottom: 2mm; }
+  .yes { color: #23824f; font-weight: 700; } .no { color: #c4372f; font-weight: 700; }
+  .btn { display: inline-flex; align-items: center; gap: 2mm; padding: 2.4mm 4.5mm; border-radius: 2.2mm; font-weight: 600; font-size: 9.5pt; border: 1px solid; }
+  table { width: 100%; border-collapse: collapse; font-size: 9pt; }
+  td, th { text-align: left; padding: 2mm 2mm; border-bottom: 1px solid var(--line); vertical-align: baseline; }
+  th { font-family: var(--mono); font-size: 7pt; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-muted); font-weight: 500; }
+</style>
+</head>
+<body>
+
+<!-- 1 · COVER -->
+<section class="page dark" style="padding: 18mm;">
+  <svg aria-hidden="true" viewBox="0 0 210 297" style="position:absolute; inset:0; width:210mm; height:297mm;">
+    <circle cx="105" cy="128" r="92" fill="none" stroke="#1b2a52" stroke-width="0.35"></circle>
+    <circle cx="105" cy="128" r="86" fill="none" stroke="#1b2a52" stroke-width="0.25" stroke-dasharray="0.6 3"></circle>
+    <circle cx="105" cy="128" r="70" fill="none" stroke="#14224a" stroke-width="9" opacity="0.6"></circle>
+    <g fill="#b8ecf2"><circle cx="20" cy="30" r="0.35" opacity=".7"></circle><circle cx="186" cy="24" r="0.4" opacity=".7"></circle><circle cx="194" cy="88" r="0.3" opacity=".5"></circle><circle cx="14" cy="120" r="0.35" opacity=".6"></circle><circle cx="198" cy="170" r="0.35" opacity=".6"></circle><circle cx="28" cy="214" r="0.3" opacity=".5"></circle><circle cx="160" cy="40" r="0.25" opacity=".5"></circle><circle cx="48" cy="52" r="0.25" opacity=".4"></circle></g>
+  </svg>
+  <div style="position:relative; display:flex; justify-content:space-between;"><span class="eyebrow">Brand guidelines · v1</span><span class="eyebrow" style="color:#ffc266;">October 2026</span></div>
+  <svg role="img" aria-label="Aetherium monogram" viewBox="0 0 240 240" style="position:relative; width:128mm; height:128mm; align-self:center; margin-top:8mm;">
+    <defs>
+      <linearGradient id="cA" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5a340f"></stop><stop offset=".2" stop-color="#a8641e"></stop><stop offset=".4" stop-color="#ff9900"></stop><stop offset=".52" stop-color="#ffc266"></stop><stop offset=".72" stop-color="#c46f16"></stop><stop offset=".86" stop-color="#e08a1e"></stop><stop offset="1" stop-color="#4e2f0e"></stop></linearGradient>
+      <linearGradient id="cO" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#7a4512"></stop><stop offset=".5" stop-color="#ff9900"></stop><stop offset="1" stop-color="#7a4512"></stop></linearGradient>
+      <filter id="cW" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency="1.4" numOctaves="2" seed="7" result="n"></feTurbulence><feColorMatrix in="n" type="matrix" values="0 0 0 0 0.24  0 0 0 0 0.11  0 0 0 0 0.02  0 0 0 -2.2 1.35" result="s"></feColorMatrix><feComposite in="s" in2="SourceGraphic" operator="in" result="w"></feComposite><feMerge><feMergeNode in="SourceGraphic"></feMergeNode><feMergeNode in="w"></feMergeNode></feMerge></filter>
+    </defs>
+    <path d="M35.9 169.9 A86 22 -12 0 1 204.1 134.1" fill="none" stroke="url(#cO)" stroke-width="3" opacity=".45"></path>
+    <path d="M120 30 L190 206 L164 206 L120 92 L76 206 L50 206 Z" fill="url(#cA)" filter="url(#cW)"></path>
+    <path d="M120 50 L178 198 L172 198 L120 70 L68 198 L62 198 Z" fill="none" stroke="#4e2f0e" stroke-width=".7" opacity=".6"></path>
+    <path d="M120 30 L190 206 L164 206 L120 92 L76 206 L50 206 Z" fill="none" stroke="#ffd9a0" stroke-width=".8" opacity=".55"></path>
+    <path d="M204.1 134.1 A86 22 -12 0 1 35.9 169.9" fill="none" stroke="url(#cO)" stroke-width="4.5" stroke-linecap="round"></path>
+    <circle cx="72" cy="171.5" r="4" fill="#b8ecf2"></circle>
+    <circle cx="120" cy="30" r="22" fill="none" stroke="#ffc266" stroke-width=".6" opacity=".45"></circle>
+    <circle cx="120" cy="30" r="15" fill="#070e22"></circle>
+    <path d="M120 0 Q122.4 27.6 140 30 Q122.4 32.4 120 56 Q117.6 32.4 100 30 Q117.6 27.6 120 0 Z" fill="#ffffff" stroke="#070e22" stroke-width="1.5" paint-order="stroke"></path>
+    <path d="M149 10 Q149.8 17.2 157 18 Q149.8 18.8 149 26 Q148.2 18.8 141 18 Q148.2 17.2 149 10 Z" fill="#ff9900"></path>
+  </svg>
+  <div style="position:relative; margin-top:auto; text-align:center;">
+    <div style="font-family:var(--display); font-weight:600; font-size:46pt; letter-spacing:-.02em; line-height:1;"><span class="gold-a">A</span><span class="gold-rest">etherium</span></div>
+    <p style="margin:5mm auto 0; text-align:center; color:#9daaba; font-size:12pt;">The invisible channel where information and work travel.</p>
+  </div>
+  <div class="foot" style="position:relative;"><span>Brand guidelines</span><span>For the Aetherium team</span></div>
+</section>
+
+<!-- 2 · THE IDEA -->
+<section class="page">
+  <span class="eyebrow">01 · The idea</span>
+  <h1>Named after the medium that lets light travel</h1>
+  <p><b>Aetherium</b> comes from <i>Aether</i>, the element ancient cosmology said filled the empty space of the universe and let light cross it. That is what we do: we are the invisible channel through which information and work move between clients, the team and the board.</p>
+  <p>The brand should feel like that medium: calm, clear, quietly precise, with one point of light where attention belongs.</p>
+  <div class="grid3" style="margin-top:6mm;">
+    <div class="panel dark" style="background:var(--void);"><span class="label">The void</span><h2 style="margin-top:3mm;">Deep space blues</h2><p class="muted" style="font-size:9.5pt;">Abyss and Void: the calm ground every piece starts from.</p></div>
+    <div class="panel" style="background:#ddf0f2; border-color:#b9dfe3;"><span class="label">The aether</span><h2 style="margin-top:3mm; color:var(--aether-strong);">The medium</h2><p class="muted" style="font-size:9.5pt;">Aether turquoise carries actions, links and the orbit in the logo.</p></div>
+    <div class="panel" style="background:#fff3df; border-color:#f3d7a8;"><span class="label">The light</span><h2 style="margin-top:3mm; color:#a8641e;">What travels</h2><p class="muted" style="font-size:9.5pt;">Amber and aged gold: the A, the photon, the one highlight per view.</p></div>
+  </div>
+  <h2 style="margin-top:10mm;">How we speak</h2>
+  <div class="grid2">
+    <div>
+      <div class="rule"><span class="yes">✓</span><span>Plain, confident, short. Say what happens: “Log interaction”, “Schedule meeting”, “Quorum met”.</span></div>
+      <div class="rule"><span class="yes">✓</span><span>Lead with the next step: “Follow up by Friday”.</span></div>
+      <div class="rule"><span class="yes">✓</span><span>Specific numbers, names and dates.</span></div>
+    </div>
+    <div>
+      <div class="rule"><span class="no">✕</span><span>Hype, exclamation marks, emoji.</span></div>
+      <div class="rule"><span class="no">✕</span><span>Space clichés: “stellar”, “out of this world”, “to infinity”.</span></div>
+      <div class="rule"><span class="no">✕</span><span>Jargon our clients would not use themselves.</span></div>
+    </div>
+  </div>
+  <div class="foot"><span>Aetherium · Brand guidelines</span><span>02</span></div>
+</section>
+
+<!-- 3 · LOGO SYSTEM -->
+<section class="page">
+  <span class="eyebrow">02 · Logo system</span>
+  <h1>Three marks, one sky</h1>
+  <p>Use the <b>monogram</b> as the face of the brand, the <b>Orbital Star</b> wherever space is tight, and the <b>armillary</b> only for large, ceremonial pieces.</p>
+  <div class="grid3" style="margin-top:4mm;">
+    <div class="panel dark" style="display:flex; flex-direction:column; gap:3mm; align-items:center; text-align:center;">
+      <svg aria-hidden="true" viewBox="0 0 120 120" style="width:34mm; height:34mm;">
+        <defs><linearGradient id="m1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#9a5a18"></stop><stop offset=".35" stop-color="#ff9900"></stop><stop offset=".55" stop-color="#ffc266"></stop><stop offset="1" stop-color="#7a4512"></stop></linearGradient></defs>
+        <rect width="120" height="120" rx="28" fill="#0e1b3d"></rect>
+        <path d="M60 26 L92 98 L80 98 L60 50 L40 98 L28 98 Z" fill="url(#m1)"></path>
+        <path d="M100 66 A44 11 -12 0 1 20 82" fill="none" stroke="#4fb8c6" stroke-width="4" stroke-linecap="round"></path>
+        <path d="M60 10 Q61.5 24.5 72 26 Q61.5 27.5 60 42 Q58.5 27.5 48 26 Q58.5 24.5 60 10 Z" fill="#ffffff" stroke="#0e1b3d" stroke-width="2" paint-order="stroke"></path>
+      </svg>
+      <b style="font-size:10.5pt;">The monogram</b>
+      <span class="muted" style="font-size:8.5pt; line-height:1.45;">The amber-gold A, crowned by the guiding star and crossed by the orbit. App icon, avatar, favicon, seals.</span>
+    </div>
+    <div class="panel dark" style="display:flex; flex-direction:column; gap:3mm; align-items:center; text-align:center;">
+      <svg aria-hidden="true" viewBox="0 0 120 120" style="width:34mm; height:34mm;">
+        <defs><linearGradient id="s1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"></stop><stop offset=".55" stop-color="#9fe3ec"></stop><stop offset="1" stop-color="#2f8f9d"></stop></linearGradient></defs>
+        <path d="M10.7 82 A54 18 -24 0 1 109.3 38" fill="none" stroke="#4fb8c6" stroke-width="2" opacity=".4"></path>
+        <path d="M60 8 Q64 56 88 60 Q64 64 60 96 Q56 64 32 60 Q56 56 60 8 Z" fill="url(#s1)"></path>
+        <path d="M109.3 38 A54 18 -24 0 1 10.7 82" fill="none" stroke="#4fb8c6" stroke-width="2"></path>
+        <path d="M95 14 Q96 23 104 24 Q96 25 95 34 Q94 25 86 24 Q94 23 95 14 Z" fill="#b8ecf2"></path>
+        <circle cx="41.7" cy="85.2" r="4" fill="#f0bd5a"></circle>
+      </svg>
+      <b style="font-size:10.5pt;">The Orbital Star</b>
+      <span class="muted" style="font-size:8.5pt; line-height:1.45;">A guiding star crossed by one orbit, a photon ahead. Small sizes, social avatars, decorative accents.</span>
+    </div>
+    <div class="panel dark" style="display:flex; flex-direction:column; gap:3mm; align-items:center; text-align:center;">
+      <svg aria-hidden="true" viewBox="0 0 240 240" style="width:34mm; height:34mm;">
+        <defs><linearGradient id="h1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"></stop><stop offset="1" stop-color="#b8ecf2"></stop></linearGradient><linearGradient id="h2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9fe3ec"></stop><stop offset="1" stop-color="#2f8f9d"></stop></linearGradient></defs>
+        <circle cx="120" cy="120" r="113" fill="none" stroke="#1b2a52" stroke-width="1"></circle>
+        <circle cx="120" cy="120" r="110" fill="none" stroke="#4fb8c6" stroke-width="6" stroke-dasharray="0.9 27.9" opacity=".6"></circle>
+        <path d="M120 0 L124 7 L116 7 Z" fill="#f0bd5a"></path>
+        <circle cx="120" cy="120" r="94" fill="none" stroke="#2f8f9d" stroke-width=".8" stroke-dasharray="1.5 5" opacity=".7"></circle>
+        <path d="M28.65 160.67 A100 30 -24 0 1 211.35 79.33" fill="none" stroke="#4fb8c6" stroke-width="1.4" opacity=".35"></path>
+        <path d="M39.1 61.22 A100 30 36 0 1 200.9 178.78" fill="none" stroke="#2f8f9d" stroke-width="1" opacity=".3"></path>
+        <path d="M120 111 L152.5 87.5 L129 120 L152.5 152.5 L120 129 L87.5 152.5 L111 120 L87.5 87.5 Z" fill="#1f6f7c"></path>
+        <path d="M120 120 L120 18 L111.5 111.5 Z" fill="url(#h1)"></path><path d="M120 120 L120 18 L128.5 111.5 Z" fill="url(#h2)"></path>
+        <path d="M120 120 L178 120 L128.5 111.5 Z" fill="url(#h1)"></path><path d="M120 120 L178 120 L128.5 128.5 Z" fill="url(#h2)"></path>
+        <path d="M120 120 L120 192 L128.5 128.5 Z" fill="url(#h2)"></path><path d="M120 120 L120 192 L111.5 128.5 Z" fill="url(#h1)"></path>
+        <path d="M120 120 L62 120 L111.5 128.5 Z" fill="url(#h2)"></path><path d="M120 120 L62 120 L111.5 111.5 Z" fill="url(#h1)"></path>
+        <path d="M211.35 79.33 A100 30 -24 0 1 28.65 160.67" fill="none" stroke="#4fb8c6" stroke-width="1.6"></path>
+        <path d="M200.9 178.78 A100 30 36 0 1 39.1 61.22" fill="none" stroke="#2f8f9d" stroke-width="1.1" opacity=".85"></path>
+        <circle cx="84.9" cy="164.1" r="5" fill="#f0bd5a"></circle>
+      </svg>
+      <b style="font-size:10.5pt;">The armillary</b>
+      <span class="muted" style="font-size:8.5pt; line-height:1.45;">Faceted star, three orbits, a graduated celestial ring. Covers, posters, screens of 160px and up.</span>
+    </div>
+  </div>
+  <h2 style="margin-top:9mm;">Anatomy of the monogram</h2>
+  <div class="grid2">
+    <div>
+      <div class="rule"><b style="color:#a8641e;">A</b><span><b>Amber-gold A.</b> Cast in gold worn by the years: patina, bronze, amber and a glint. It carries the name.</span></div>
+      <div class="rule"><b>✦</b><span><b>Guiding star.</b> Crowns the apex; its long north arm points the way.</span></div>
+    </div>
+    <div>
+      <div class="rule"><b style="color:var(--aether);">◯</b><span><b>The orbit.</b> Becomes the crossbar of the A: the aether that carries the work.</span></div>
+      <div class="rule"><b style="color:#2f8f9d;">•</b><span><b>Photon and sparkle.</b> Information in motion, and the people we work with.</span></div>
+    </div>
+  </div>
+  <div class="foot"><span>Aetherium · Brand guidelines</span><span>03</span></div>
+</section>
+
+<!-- 4 · LOGO USAGE -->
+<section class="page">
+  <span class="eyebrow">03 · Using the logo</span>
+  <h1>Lockups, sizes and space</h1>
+  <div class="grid2" style="margin-top:2mm;">
+    <div class="panel dark" style="background:var(--void); display:flex; flex-direction:column; gap:5mm;">
+      <span class="label">Preferred · on void or abyss</span>
+      <div style="display:flex; align-items:center; gap:4mm;">
+        <svg aria-hidden="true" viewBox="0 0 120 120" style="width:15mm; height:15mm;"><defs><linearGradient id="m2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#9a5a18"></stop><stop offset=".35" stop-color="#ff9900"></stop><stop offset=".55" stop-color="#ffc266"></stop><stop offset="1" stop-color="#7a4512"></stop></linearGradient></defs><rect width="120" height="120" rx="28" fill="#070e22"></rect><path d="M60 26 L92 98 L80 98 L60 50 L40 98 L28 98 Z" fill="url(#m2)"></path><path d="M100 66 A44 11 -12 0 1 20 82" fill="none" stroke="#4fb8c6" stroke-width="4" stroke-linecap="round"></path><path d="M60 10 Q61.5 24.5 72 26 Q61.5 27.5 60 42 Q58.5 27.5 48 26 Q58.5 24.5 60 10 Z" fill="#ffffff" stroke="#070e22" stroke-width="2" paint-order="stroke"></path></svg>
+        <span style="font-family:var(--display); font-weight:600; font-size:20pt; letter-spacing:-.02em;"><span class="gold-a">A</span><span class="gold-rest">etherium</span></span>
+      </div>
+      <span class="muted" style="font-size:8.5pt;">Amber A, the rest of the name in aged gold.</span>
+    </div>
+    <div class="panel" style="background:var(--surface); display:flex; flex-direction:column; gap:5mm;">
+      <span class="label">On light backgrounds</span>
+      <div style="display:flex; align-items:center; gap:4mm;">
+        <svg aria-hidden="true" viewBox="0 0 120 120" style="width:15mm; height:15mm;"><defs><linearGradient id="m3" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#9a5a18"></stop><stop offset=".35" stop-color="#ff9900"></stop><stop offset=".55" stop-color="#ffc266"></stop><stop offset="1" stop-color="#7a4512"></stop></linearGradient></defs><rect width="120" height="120" rx="28" fill="#0e1b3d"></rect><path d="M60 26 L92 98 L80 98 L60 50 L40 98 L28 98 Z" fill="url(#m3)"></path><path d="M100 66 A44 11 -12 0 1 20 82" fill="none" stroke="#4fb8c6" stroke-width="4" stroke-linecap="round"></path><path d="M60 10 Q61.5 24.5 72 26 Q61.5 27.5 60 42 Q58.5 27.5 48 26 Q58.5 24.5 60 10 Z" fill="#ffffff" stroke="#0e1b3d" stroke-width="2" paint-order="stroke"></path></svg>
+        <span style="font-family:var(--display); font-weight:600; font-size:20pt; letter-spacing:-.02em; color:var(--void);"><span class="gold-a">A</span>etherium</span>
+      </div>
+      <span class="muted" style="font-size:8.5pt;">The icon keeps its void tile; the name goes deep blue with the amber A.</span>
+    </div>
+  </div>
+  <div class="grid2" style="margin-top:7mm;">
+    <div>
+      <h2>Sizes</h2>
+      <div style="display:flex; align-items:flex-end; gap:5mm; margin:3mm 0 3mm;">
+        <svg aria-hidden="true" viewBox="0 0 120 120" style="width:20mm; height:20mm;"><defs><linearGradient id="m4" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#9a5a18"></stop><stop offset=".35" stop-color="#ff9900"></stop><stop offset=".55" stop-color="#ffc266"></stop><stop offset="1" stop-color="#7a4512"></stop></linearGradient></defs><rect width="120" height="120" rx="28" fill="#0e1b3d"></rect><path d="M60 26 L92 98 L80 98 L60 50 L40 98 L28 98 Z" fill="url(#m4)"></path><path d="M100 66 A44 11 -12 0 1 20 82" fill="none" stroke="#4fb8c6" stroke-width="4" stroke-linecap="round"></path><path d="M60 10 Q61.5 24.5 72 26 Q61.5 27.5 60 42 Q58.5 27.5 48 26 Q58.5 24.5 60 10 Z" fill="#ffffff" stroke="#0e1b3d" stroke-width="2" paint-order="stroke"></path></svg>
+        <svg aria-hidden="true" viewBox="0 0 120 120" style="width:11mm; height:11mm;"><defs><linearGradient id="m5" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#9a5a18"></stop><stop offset=".45" stop-color="#ffb347"></stop><stop offset="1" stop-color="#7a4512"></stop></linearGradient></defs><rect width="120" height="120" rx="28" fill="#0e1b3d"></rect><path d="M60 22 L96 102 L80 102 L60 52 L40 102 L24 102 Z" fill="url(#m5)"></path><path d="M60 6 Q62 22 76 24 Q62 26 60 42 Q58 26 44 24 Q58 22 60 6 Z" fill="#ffffff" stroke="#0e1b3d" stroke-width="3" paint-order="stroke"></path></svg>
+        <svg aria-hidden="true" viewBox="0 0 120 120" style="width:6mm; height:6mm;"><rect width="120" height="120" rx="28" fill="#0e1b3d"></rect><path d="M60 12 Q66 54 94 60 Q66 66 60 108 Q54 66 26 60 Q54 54 60 12 Z" fill="#ffffff"></path></svg>
+      </div>
+      <ul>
+        <li>48px and up: full monogram with orbit.</li>
+        <li>24–48px: A and star, orbit dropped.</li>
+        <li>Under 24px (favicon): the star alone.</li>
+      </ul>
+    </div>
+    <div>
+      <h2>Clear space</h2>
+      <p class="muted" style="font-size:9.5pt;">Keep empty space equal to the star's height on every side of the icon, and half the icon's width between the icon and the name.</p>
+      <h2 style="margin-top:5mm;">Don't</h2>
+      <div class="rule"><span class="no">✕</span><span>Rotate, stretch or outline the logo.</span></div>
+      <div class="rule"><span class="no">✕</span><span>Recolor the A or swap the golds for flat yellow.</span></div>
+      <div class="rule"><span class="no">✕</span><span>Add glows, drop shadows or busy photo backgrounds.</span></div>
+      <div class="rule"><span class="no">✕</span><span>Place it on turquoise or amber fills.</span></div>
+    </div>
+  </div>
+  <div class="foot"><span>Aetherium · Brand guidelines</span><span>04</span></div>
+</section>
+
+<!-- 5 · COLOR -->
+<section class="page">
+  <span class="eyebrow">04 · Color</span>
+  <h1>Night blues, aether and aged gold</h1>
+  <p class="muted">Blues are the ground, turquoise does the work, gold is the light. Use gold sparingly: one gold moment per screen or page.</p>
+  <h2 style="margin-top:4mm;">Brand blues</h2>
+  <div class="grid3" style="grid-template-columns: repeat(5, minmax(0,1fr)); gap:3mm;">
+    <div class="swatch"><div class="chip" style="background:#070e22;"></div><div class="meta"><b>Abyss</b><code>#070E22 · 7 14 34</code></div></div>
+    <div class="swatch"><div class="chip" style="background:#0e1b3d;"></div><div class="meta"><b>Void</b><code>#0E1B3D · 14 27 61</code></div></div>
+    <div class="swatch"><div class="chip" style="background:#1f6f7c;"></div><div class="meta"><b>Aether strong</b><code>#1F6F7C · 31 111 124</code></div></div>
+    <div class="swatch"><div class="chip" style="background:#2f8f9d;"></div><div class="meta"><b>Aether</b><code>#2F8F9D · 47 143 157</code></div></div>
+    <div class="swatch"><div class="chip" style="background:#9fe3ec;"></div><div class="meta"><b>Starlight</b><code>#9FE3EC · 159 227 236</code></div></div>
+  </div>
+  <h2 style="margin-top:6mm;">The golds</h2>
+  <div class="grid3" style="grid-template-columns: repeat(5, minmax(0,1fr)); gap:3mm;">
+    <div class="swatch"><div class="chip" style="background:var(--amber-grad);"></div><div class="meta"><b>Amber A</b><code>gradient · monogram A</code></div></div>
+    <div class="swatch"><div class="chip" style="background:#ff9900;"></div><div class="meta"><b>Amber</b><code>#FF9900 · 255 153 0</code></div></div>
+    <div class="swatch"><div class="chip" style="background:#c46f16;"></div><div class="meta"><b>Bronze</b><code>#C46F16 · 196 111 22</code></div></div>
+    <div class="swatch"><div class="chip" style="background:var(--old-grad);"></div><div class="meta"><b>Aged gold</b><code>gradient · “etherium”</code></div></div>
+    <div class="swatch"><div class="chip" style="background:#e3a93b;"></div><div class="meta"><b>Lumen</b><code>#E3A93B · UI highlight</code></div></div>
+  </div>
+  <h2 style="margin-top:6mm;">Neutrals and states</h2>
+  <div class="grid3" style="grid-template-columns: repeat(6, minmax(0,1fr)); gap:3mm;">
+    <div class="swatch"><div class="chip" style="background:#f4f6f8; height:14mm;"></div><div class="meta"><b>Surface</b><code>#F4F6F8</code></div></div>
+    <div class="swatch"><div class="chip" style="background:#d9e0e7; height:14mm;"></div><div class="meta"><b>Line</b><code>#D9E0E7</code></div></div>
+    <div class="swatch"><div class="chip" style="background:#0f1a2a; height:14mm;"></div><div class="meta"><b>Ink</b><code>#0F1A2A</code></div></div>
+    <div class="swatch"><div class="chip" style="background:#23824f; height:14mm;"></div><div class="meta"><b>Success</b><code>#23824F</code></div></div>
+    <div class="swatch"><div class="chip" style="background:#a86400; height:14mm;"></div><div class="meta"><b>Warning</b><code>#A86400</code></div></div>
+    <div class="swatch"><div class="chip" style="background:#c4372f; height:14mm;"></div><div class="meta"><b>Danger</b><code>#C4372F</code></div></div>
+  </div>
+  <h2 style="margin-top:6mm;">Rules</h2>
+  <div class="grid2">
+    <div>
+      <div class="rule"><span class="yes">✓</span><span>Text on blue is Starlight or near-white (#E8EEF4).</span></div>
+      <div class="rule"><span class="yes">✓</span><span>Buttons and links use Aether strong; white text on it passes contrast.</span></div>
+    </div>
+    <div>
+      <div class="rule"><span class="no">✕</span><span>Never set body text in amber, gold or Aether on white.</span></div>
+      <div class="rule"><span class="no">✕</span><span>Warning is not decoration: it always comes with an icon or a word.</span></div>
+    </div>
+  </div>
+  <div class="foot"><span>Aetherium · Brand guidelines</span><span>05</span></div>
+</section>
+
+<!-- 6 · TYPOGRAPHY -->
+<section class="page">
+  <span class="eyebrow">05 · Typography</span>
+  <h1>Wide display, calm text, exact figures</h1>
+  <p class="muted">Three families, all free on Google Fonts.</p>
+  <div class="panel" style="margin-top:4mm;">
+    <span class="label">Display · Unbounded 500–700</span>
+    <div style="font-family:var(--display); font-weight:600; font-size:36pt; line-height:1.05; letter-spacing:-.02em; margin:3mm 0;">Where the work travels</div>
+    <p class="muted" style="font-size:9pt; margin:0;">The wordmark and one hero line per page. Never for labels or body text.</p>
+  </div>
+  <div class="grid2" style="margin-top:5mm;">
+    <div class="panel">
+      <span class="label">Text · Instrument Sans 400–600</span>
+      <div style="font-size:15pt; font-weight:600; margin:3mm 0 2mm;">Board of Directors</div>
+      <div style="font-size:10.5pt; line-height:1.55;">Every relationship gets a dated next step. Instrument Sans carries the product, documents and email.</div>
+    </div>
+    <div class="panel">
+      <span class="label">Utility · JetBrains Mono 500</span>
+      <div style="font-family:var(--mono); font-size:13pt; margin:3mm 0 2mm; letter-spacing:.04em;">R-2026-004 · QUORUM 4/4</div>
+      <div style="font-size:10.5pt; line-height:1.55;">IDs, resolution numbers, labels and figures that must line up.</div>
+    </div>
+  </div>
+  <h2 style="margin-top:8mm;">Type scale</h2>
+  <table>
+    <thead><tr><th>Style</th><th>Family</th><th>Size / line</th><th>Use</th></tr></thead>
+    <tbody>
+      <tr><td><b>display-xl</b></td><td>Unbounded 600</td><td>56 / 60 px</td><td>Wordmark, one hero line</td></tr>
+      <tr><td><b>display-l</b></td><td>Unbounded 500</td><td>36 / 42 px</td><td>Covers, marketing titles</td></tr>
+      <tr><td><b>title</b></td><td>Instrument Sans 600</td><td>22 / 28 px</td><td>Page titles in the product</td></tr>
+      <tr><td><b>heading</b></td><td>Instrument Sans 600</td><td>16 / 24 px</td><td>Card and section headings</td></tr>
+      <tr><td><b>body</b></td><td>Instrument Sans 400</td><td>15 / 24 px</td><td>Running text, tables</td></tr>
+      <tr><td><b>small</b></td><td>Instrument Sans 400</td><td>13 / 18 px</td><td>Metadata, help text</td></tr>
+      <tr><td><b>label</b></td><td>JetBrains Mono 500</td><td>12 / 16 px · +6%</td><td>Uppercase labels, IDs</td></tr>
+    </tbody>
+  </table>
+  <div class="foot"><span>Aetherium · Brand guidelines</span><span>06</span></div>
+</section>
+
+<!-- 7 · INTERFACE -->
+<section class="page">
+  <span class="eyebrow">06 · Interface</span>
+  <h1>How the brand looks in the product</h1>
+  <p class="muted">The Aetherium CRM &amp; Board app is the reference implementation of these rules.</p>
+  <h2 style="margin-top:4mm;">Buttons</h2>
+  <div class="panel" style="display:flex; flex-wrap:wrap; gap:4mm; align-items:center;">
+    <span class="btn" style="background:linear-gradient(180deg,#3f8692 0%,#1f6f7c 55%); border-color:#1f6f7c; color:#fff;">+ New contact</span>
+    <span class="btn" style="background:#0e1b3d; border-color:#9a5a18; color:#ffc266;">+ New</span>
+    <span class="btn" style="background:#fff; border-color:#c4cfda; color:#0f1a2a;">Export CSV</span>
+    <span class="btn" style="background:#c4372f; border-color:#c4372f; color:#fff;">Delete</span>
+    <span class="btn" style="background:transparent; border-color:transparent; color:#c4372f;">Remove</span>
+  </div>
+  <div class="grid2" style="margin-top:3mm;">
+    <div class="rule"><span class="yes">✓</span><span><b>Primary</b>: Aether strong with a soft top light, for the main action of a page.</span></div>
+    <div class="rule"><span class="yes">✓</span><span><b>Brand</b>: void with an amber edge. Only one per screen (“+ New”).</span></div>
+  </div>
+  <h2 style="margin-top:6mm;">Navigation and badges</h2>
+  <div class="grid2">
+    <div class="panel" style="display:flex; flex-direction:column; gap:2mm;">
+      <div style="display:flex; align-items:center; gap:3mm; padding:2mm 3mm; border-radius:2mm; background:#ddf0f2; color:#175a65; font-weight:600; font-size:10pt;">◉ Board of Directors</div>
+      <div style="display:flex; align-items:center; gap:3mm; padding:2mm 3mm; color:#3c4a5c; font-size:10pt;">○ Contacts</div>
+      <div style="display:flex; align-items:center; gap:3mm; padding:2mm 3mm; color:#3c4a5c; font-size:10pt;">○ Pipeline</div>
+    </div>
+    <div class="panel" style="display:flex; flex-wrap:wrap; gap:2.5mm; align-content:flex-start;">
+      <span style="font-size:8.5pt; font-weight:600; padding:1.2mm 3mm; border-radius:99px; background:#e0eff1; color:#175a65;">Board Member</span>
+      <span style="font-size:8.5pt; font-weight:600; padding:1.2mm 3mm; border-radius:99px; background:#e3f2e9; color:#1b6b41;">Client</span>
+      <span style="font-size:8.5pt; font-weight:600; padding:1.2mm 3mm; border-radius:99px; background:#e4ebfa; color:#2a52b0;">Prospect</span>
+      <span style="font-size:8.5pt; font-weight:600; padding:1.2mm 3mm; border-radius:99px; background:#fbe8e7; color:#a52d26;">Overdue</span>
+      <span style="font-size:8.5pt; font-weight:700; padding:1.2mm 3mm; border-radius:99px; background:var(--amber-grad); color:#070e22;">Demo</span>
+    </div>
+  </div>
+  <h2 style="margin-top:6mm;">Principles</h2>
+  <ul>
+    <li><b>One light per view.</b> If two things glow, neither does.</li>
+    <li><b>Borders over shadows.</b> Hairlines separate; shadows only for menus, dialogs and toasts.</li>
+    <li><b>Both themes are first-class.</b> Dark mode lifts the blues and brightens the golds; never just inverts.</li>
+    <li><b>Motion is slow and linear</b>, like light crossing a distance. No bounces.</li>
+  </ul>
+  <div class="foot"><span>Aetherium · Brand guidelines</span><span>07</span></div>
+</section>
+
+<!-- 8 · APPLICATIONS -->
+<section class="page dark">
+  <span class="eyebrow">07 · Applications</span>
+  <h1 style="color:#f4f7fa;">In the world</h1>
+  <div class="grid2" style="margin-top:4mm; align-items:start;">
+    <div style="aspect-ratio:1; border-radius:3mm; background:#070e22; border:1px solid #1b2a52; position:relative; overflow:hidden; padding:6mm; display:flex; flex-direction:column; justify-content:space-between;">
+      <svg aria-hidden="true" viewBox="0 0 100 100" style="position:absolute; inset:0; width:100%; height:100%;">
+        <circle cx="0" cy="100" r="28" fill="none" stroke="#2f8f9d" stroke-width=".3" opacity=".9"></circle>
+        <circle cx="0" cy="100" r="43" fill="none" stroke="#2f8f9d" stroke-width=".3" opacity=".6"></circle>
+        <circle cx="0" cy="100" r="58" fill="none" stroke="#2f8f9d" stroke-width=".3" opacity=".4"></circle>
+        <circle cx="0" cy="100" r="73" fill="none" stroke="#2f8f9d" stroke-width=".3" opacity=".22"></circle>
+        <circle cx="41" cy="59" r="2" fill="#ff9900"></circle>
+      </svg>
+      <div style="position:relative; display:flex; justify-content:space-between; align-items:center;">
+        <span style="font-family:var(--display); font-weight:600; font-size:11pt;"><span class="gold-a">A</span><span class="gold-rest">etherium</span></span>
+        <span style="font-family:var(--mono); font-size:6.5pt; letter-spacing:.1em; background:#ff9900; color:#070e22; border-radius:99px; padding:1mm 2.5mm;">NOW LIVE</span>
+      </div>
+      <div style="position:relative; text-align:right; font-family:var(--display); font-weight:500; font-size:15pt; line-height:1.05; letter-spacing:-.02em; color:#f4f7fa;">Your work travels.<br>We are the channel.</div>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:5mm;">
+      <div class="panel dark" style="background:#0e1b3d;">
+        <span class="label">Social post · 1080 × 1080</span>
+        <p class="muted" style="font-size:9pt; margin-top:2mm;">Abyss ground, orbits rising from a corner, one amber photon, the headline in Unbounded aligned right.</p>
+      </div>
+      <div class="panel dark" style="background:#0e1b3d; display:flex; gap:4mm; align-items:center;">
+        <svg aria-hidden="true" viewBox="0 0 120 120" style="width:13mm; height:13mm; flex:none;"><defs><linearGradient id="m6" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#9a5a18"></stop><stop offset=".35" stop-color="#ff9900"></stop><stop offset=".55" stop-color="#ffc266"></stop><stop offset="1" stop-color="#7a4512"></stop></linearGradient></defs><rect width="120" height="120" rx="60" fill="#070e22"></rect><path d="M60 26 L92 98 L80 98 L60 50 L40 98 L28 98 Z" fill="url(#m6)"></path><path d="M100 66 A44 11 -12 0 1 20 82" fill="none" stroke="#4fb8c6" stroke-width="4" stroke-linecap="round"></path><path d="M60 10 Q61.5 24.5 72 26 Q61.5 27.5 60 42 Q58.5 27.5 48 26 Q58.5 24.5 60 10 Z" fill="#ffffff" stroke="#070e22" stroke-width="2" paint-order="stroke"></path></svg>
+        <div><span class="label">Profile picture</span><p class="muted" style="font-size:9pt; margin:1mm 0 0;">The monogram in a circle on abyss for LinkedIn, WhatsApp and email.</p></div>
+      </div>
+      <div class="panel dark" style="background:#0e1b3d;">
+        <span class="label">Email signature</span>
+        <div style="margin-top:3mm; font-size:9.5pt; line-height:1.5;"><b style="color:#f4f7fa;">[Name]</b> · [Role]<br><span style="font-family:var(--display); font-weight:600;"><span class="gold-a">A</span><span class="gold-rest">etherium</span></span> <span class="muted">· The invisible channel where work travels</span></div>
+      </div>
+    </div>
+  </div>
+  <h2 style="margin-top:8mm; color:#f4f7fa;">Where to find everything</h2>
+  <ul style="color:#c9d3df;">
+    <li>App (team): stick474-arch.github.io/first-way-health-crm</li>
+    <li>Demo: stick474-arch.github.io/first-way-health-crm/demo</li>
+    <li>Design system and brand canvas: in Claude Design (ask Felipe for access).</li>
+  </ul>
+  <div class="foot"><span>Aetherium · Brand guidelines v1</span><span>08</span></div>
+</section>
+
+</body>
+</html>

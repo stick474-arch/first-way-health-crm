@@ -38,8 +38,80 @@ const Actions = (() => {
     ];
   }
 
+  // ---- Board members: our own people, not external contacts -------------------------------
+  const teamUserFor = (email, name) => S.all('users').find((u) => (email && (u.email || '').toLowerCase() === email.toLowerCase())
+    || (!email && name && u.name.toLowerCase() === name.toLowerCase())) || null;
+
+  function editBoardMember(ds = {}) {
+    const existing = S.get('contacts', ds.id);
+    const b = existing?.board || {};
+    let first = existing?.firstName || '';
+    let last = existing?.lastName || '';
+    if (!existing && ds.name) [first, ...last] = ds.name.trim().split(/\s+/), last = last.join(' ');
+    if (!existing && !first && ds.email) first = ds.email.split('@')[0].replace(/[._-]+/g, ' ').replace(/\b\w/g, (m) => m.toUpperCase());
+    const email = existing?.email || ds.email || '';
+    const type = existing?.type || ds.type || 'Board Member';
+    const values = {
+      firstName: first, lastName: last, email, phone: existing?.phone || '', title: existing?.title || '',
+      type, board_role: b.role || (type === 'Advisor' ? 'Advisor' : 'Director'),
+      board_voting: existing ? b.voting !== false : type !== 'Advisor', board_independent: !!b.independent,
+      board_termStart: b.termStart || U.today(), board_termEnd: b.termEnd || U.addDays(U.today(), 730),
+      board_committees: b.committees || [], board_coi: b.coi || '', notes: existing?.notes || '',
+      isTeam: existing ? !!teamUserFor(email, S.contactName(existing)) : ds.team !== 'no',
+    };
+    UI.formModal({
+      title: existing ? `${S.contactName(existing)} · board seat` : 'Add someone to our board',
+      intro: existing ? '' : 'Board members are people of the company, not clients: name, seat and term are enough to start.',
+      size: 'lg', values,
+      submitText: existing ? 'Save' : 'Add to the board',
+      fields: [
+        { type: 'section', label: 'Who' },
+        { name: 'firstName', label: 'First name', required: true },
+        { name: 'lastName', label: 'Last name' },
+        { name: 'email', label: 'Email', type: 'email', help: 'Use the same email they sign in with.' },
+        { name: 'phone', label: 'Phone', type: 'tel' },
+        { name: 'title', label: 'What they do', placeholder: 'e.g. Co-founder & CEO, Aetherium', span: 2 },
+        { type: 'section', label: 'Seat on the board' },
+        { name: 'type', label: 'Seat', type: 'select', options: [{ value: 'Board Member', label: 'Director (votes)' }, { value: 'Advisor', label: 'Advisor (does not vote)' }] },
+        { name: 'board_role', label: 'Role', type: 'select', options: S.BOARD_ROLES },
+        { name: 'board_termStart', label: 'Term starts', type: 'date' },
+        { name: 'board_termEnd', label: 'Term ends', type: 'date', help: 'Founding boards usually serve 2 years.' },
+        { name: 'board_voting', type: 'checkbox', checkLabel: 'Counts toward quorum', showWhen: 'type:Board Member' },
+        { name: 'board_independent', type: 'checkbox', checkLabel: 'Independent (not a founder, employee or investor)' },
+        { name: 'board_committees', label: 'Committees', type: 'chips', options: S.settings.committees, span: 2 },
+        { type: 'section', label: 'In the company' },
+        { name: 'isTeam', type: 'checkbox', span: 2, checkLabel: 'Also part of the team: can own tasks and follow-ups, and appears in “Team members”' },
+        { name: 'notes', label: 'Background, expertise and how they help', type: 'textarea', rows: 2, span: 2 },
+        { name: 'board_coi', label: 'Conflict-of-interest disclosures', type: 'textarea', rows: 2, span: 2, placeholder: 'e.g. 2026-10-17: also advises a payer; abstains from payer votes.' },
+      ],
+      onSubmit: (d) => {
+        if (d.email) {
+          const dup = S.all('contacts').find((c) => c.id !== existing?.id && (c.email || '').toLowerCase() === d.email.toLowerCase());
+          if (dup) { UI.toast(`${S.contactName(dup)} already uses ${d.email}. Open that record instead.`, 'error'); return false; }
+        }
+        const rec = S.upsert('contacts', {
+          ...(existing || { priority: 'A', source: 'Founding board', ownerId: S.currentUser()?.id || '', tags: [], cadenceDays: null, orgId: '' }),
+          firstName: d.firstName, lastName: d.lastName, email: d.email, phone: d.phone, title: d.title, notes: d.notes, type: d.type,
+          board: {
+            role: d.board_role, committees: d.board_committees, termStart: d.board_termStart, termEnd: d.board_termEnd,
+            voting: d.type === 'Board Member' ? d.board_voting : false, independent: d.board_independent, coi: d.board_coi,
+          },
+        });
+        const name = S.contactName(rec);
+        const user = teamUserFor(d.email, name);
+        if (d.isTeam && !user) S.upsert('users', { name, email: d.email, role: d.board_role });
+        else if (d.isTeam && user && user.name !== name && user.name === (user.email || '').split('@')[0]) S.update('users', user.id, { name });
+        UI.toast(existing ? 'Board seat updated' : `${name} joined the board`, 'success');
+      },
+      onDelete: existing ? () => { S.remove('contacts', existing.id); UI.toast('Removed from the board'); } : null,
+      deleteText: 'Remove from board',
+      deleteConfirm: 'Remove this person from the board? Past meetings keep their attendance and minutes.',
+    });
+  }
+
   function editContact(ds = {}) {
     const existing = S.get('contacts', ds.id);
+    if ((existing && S.isBoardType(existing.type)) || (!existing && S.isBoardType(ds.type))) return editBoardMember(ds);
     const preset = existing || {
       type: ds.type || 'Lead', priority: 'B', ownerId: S.currentUser()?.id || '', orgId: ds.org || '', tags: [],
     };
@@ -233,7 +305,7 @@ const Actions = (() => {
     const contact = S.get('contacts', ds.contact);
     const values = existing || {
       kind: ds.kind || (ds.meeting ? 'Board action' : 'Follow-up'), priority: 'Normal', due: U.addDays(U.today(), ds.meeting ? 14 : 3),
-      ownerId: S.currentUser()?.id || '', contactId: ds.contact || '', orgId: ds.org || contact?.orgId || '', dealId: ds.deal || '', meetingId: ds.meeting || '',
+      ownerId: ds.owner || S.currentUser()?.id || '', contactId: ds.contact || '', orgId: ds.org || contact?.orgId || '', dealId: ds.deal || '', meetingId: ds.meeting || '',
     };
     UI.formModal({
       title: existing ? 'Edit task' : values.kind === 'Board action' ? 'New board action item' : 'New task',
@@ -304,7 +376,7 @@ const Actions = (() => {
           return;
         }
         const agenda = useTemplate && m.type !== 'Committee'
-          ? S.STANDARD_AGENDA.map((a) => ({ ...a, id: U.uid('agi'), presenter: '' }))
+          ? (m.type === 'Inaugural' ? S.INAUGURAL_AGENDA : S.STANDARD_AGENDA).map((a) => ({ ...a, id: U.uid('agi'), presenter: '' }))
           : [{ id: U.uid('agi'), title: 'Call to order & quorum check', kind: 'Information', minutes: 5, presenter: '' }];
         const saved = S.upsert('meetings', { ...m, agenda, attendance: {}, minutes: '' });
         UI.toast('Meeting scheduled', 'success');
@@ -411,6 +483,8 @@ const Actions = (() => {
   return {
     newContact: (ds) => editContact({ ...ds, id: '' }),
     editContact,
+    newBoardMember: (ds) => editBoardMember({ ...ds, id: '' }),
+    editBoardMember,
     newOrg: (ds) => editOrg({ ...ds, id: '' }),
     editOrg,
     newDeal: (ds) => editDeal({ ...ds, id: '' }),
