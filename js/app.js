@@ -29,7 +29,8 @@ const App = (() => {
     $('#nav').innerHTML = NAV.map((n) => (n.sep !== undefined
       ? `<div class="nav-sep">${esc(n.sep)}</div>`
       : `<a href="#/${n.id}" class="nav-item ${current.name === n.id ? 'active' : ''}" ${current.name === n.id ? 'aria-current="page"' : ''}>${UI.icon(n.icon)}<span>${esc(n.label)}</span>${counts[n.id] || ''}</a>`)).join('');
-    $('#brandName').textContent = S.settings.companyName || 'Aetherium';
+    const company = S.settings.companyName || 'Aetherium';
+    $('#brandName').innerHTML = `<span class="gold-a">${esc(company.slice(0, 1))}</span>${esc(company.slice(1))}`;
 
     renderFoot();
   }

@@ -7,6 +7,7 @@
   <title>Demo · Aetherium CRM & Board</title>
   <meta name="description" content="Client tracking, contact categorization and board of directors management for Aetherium.">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'%3E%3Crect width='120' height='120' rx='28' fill='%230e1b3d'/%3E%3Cpath d='M60 12 Q66 54 94 60 Q66 66 60 108 Q54 66 26 60 Q54 54 60 12 Z' fill='white'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;600;700&family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap">
   <link rel="stylesheet" href="../css/app.css">
 </head>
 <body>
@@ -14,10 +15,10 @@
     <aside class="sidebar" id="sidebar">
       <div class="brand">
         <div class="brand-mark" aria-hidden="true">
-          <svg viewBox="0 0 120 120" aria-hidden="true"><defs><linearGradient id="brandStar" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#9fe3ec"/></linearGradient></defs><rect width="120" height="120" rx="28" fill="#0e1b3d"/><g transform="translate(12 12) scale(0.8)"><path d="M10.7 82 A54 18 -24 0 1 109.3 38" fill="none" stroke="#4fb8c6" stroke-width="5" opacity="0.4"/><path d="M60 8 Q64 56 88 60 Q64 64 60 96 Q56 64 32 60 Q56 56 60 8 Z" fill="url(#brandStar)"/><path d="M109.3 38 A54 18 -24 0 1 10.7 82" fill="none" stroke="#4fb8c6" stroke-width="5"/><circle cx="41.7" cy="85.2" r="7" fill="#f0bd5a"/></g></svg>
+          <svg viewBox="0 0 120 120" aria-hidden="true"><defs><linearGradient id="brandStar" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8a6a2f"/><stop offset="0.45" stop-color="#f0d99a"/><stop offset="1" stop-color="#6e5320"/></linearGradient></defs><rect width="120" height="120" rx="28" fill="#0e1b3d"/><path d="M60 26 L92 98 L80 98 L60 50 L40 98 L28 98 Z" fill="url(#brandStar)"/><path d="M100 66 A44 11 -12 0 1 20 82" fill="none" stroke="#4fb8c6" stroke-width="4" stroke-linecap="round"/><path d="M60 10 Q61.5 24.5 72 26 Q61.5 27.5 60 42 Q58.5 27.5 48 26 Q58.5 24.5 60 10 Z" fill="#ffffff" stroke="#0e1b3d" stroke-width="2" paint-order="stroke"/></svg>
         </div>
         <div class="brand-text">
-          <strong id="brandName">Aetherium</strong>
+          <strong id="brandName"><span class="gold-a">A</span>etherium</strong>
           <span>CRM &amp; Board</span>
         </div>
       </div>
@@ -36,7 +37,7 @@
         </div>
         <div class="topbar-actions">
           <div class="dropdown" id="newMenu">
-            <button class="btn btn-primary" data-act="toggleNewMenu" id="newBtn"></button>
+            <button class="btn btn-brand" data-act="toggleNewMenu" id="newBtn"></button>
             <div class="menu" hidden id="newMenuList"></div>
           </div>
           <button class="icon-btn" data-act="toggleTheme" aria-label="Toggle dark mode" id="themeBtn"></button>

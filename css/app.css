@@ -1,17 +1,17 @@
 /* Aetherium CRM — styles. Tokens first; dark mode redefines tokens only. */
 :root {
-  --bg: #f5f7f9;
+  --bg: #f4f6f8;
   --surface: #ffffff;
-  --surface-2: #f0f3f6;
-  --surface-3: #e7ecf0;
-  --border: #e1e6eb;
-  --border-strong: #cdd5dd;
-  --text: #17212b;
-  --text-2: #4a5866;
-  --muted: #6b7885;
-  --primary: #0e7c86;
-  --primary-strong: #0a646c;
-  --primary-soft: #e3f3f4;
+  --surface-2: #eef2f6;
+  --surface-3: #e3e9ef;
+  --border: #d9e0e7;
+  --border-strong: #c4cfda;
+  --text: #0f1a2a;
+  --text-2: #3c4a5c;
+  --muted: #4f5d6e;
+  --primary: #1f6f7c;
+  --primary-strong: #175a65;
+  --primary-soft: #ddf0f2;
   --on-primary: #ffffff;
   --danger: #c4372f;
   --danger-soft: #fdeceb;
@@ -19,14 +19,21 @@
   --warning-soft: #fff4e0;
   --success: #23824f;
   --success-soft: #e5f5ec;
-  --focus: 0 0 0 3px rgba(14, 124, 134, .28);
+  --focus: 0 0 0 3px rgba(31, 111, 124, .3);
+  --void: #0e1b3d;
+  --abyss: #070e22;
+  --on-void: #e8eef4;
+  --lumen: #e3a93b;
+  --gold-1: #4e3a16; --gold-2: #8a6a2f; --gold-3: #c9a55c; --gold-4: #f0d99a;
+  --gold: linear-gradient(160deg, #5e461b 0%, #9c7a3c 22%, #f0d99a 45%, #c9a55c 58%, #8a6a2f 78%, #4e3a16 100%);
   --shadow-1: 0 1px 2px rgba(16, 24, 40, .05), 0 1px 3px rgba(16, 24, 40, .06);
   --shadow-2: 0 8px 24px rgba(16, 24, 40, .12), 0 2px 6px rgba(16, 24, 40, .06);
   --radius: 10px;
   --radius-sm: 7px;
   --sidebar-w: 248px;
-  --font: "Segoe UI", -apple-system, BlinkMacSystemFont, "Inter", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --mono: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --font: "Instrument Sans", "Segoe UI", -apple-system, BlinkMacSystemFont, "Inter", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --display: "Unbounded", "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
 
   --c-sky: #1f8fd6; --c-blue: #2f62d8; --c-green: #23824f; --c-slate: #5b6b7b; --c-violet: #7048d6;
   --c-pink: #c23a86; --c-amber: #b26b00; --c-orange: #d0561b; --c-teal: #0e7c86; --c-cyan: #0b84a5; --c-red: #c4372f;
@@ -37,11 +44,11 @@
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #0e1318; --surface: #151b22; --surface-2: #1b232b; --surface-3: #232c36; --border: #27313b; --border-strong: #35414d;
-    --text: #e6ebf0; --text-2: #b4bfca; --muted: #8b98a5;
-    --primary: #2bb2bc; --primary-strong: #4cc6cf; --primary-soft: #12343a; --on-primary: #06181b;
+    --bg: #0a111b; --surface: #121c2a; --surface-2: #18243a; --surface-3: #1f2d45; --border: #24324a; --border-strong: #31425e;
+    --text: #e8eef4; --text-2: #b9c4d1; --muted: #9daaba; --void: #1c2c5a; --abyss: #050a18; --lumen: #f0bd5a; --gold: linear-gradient(160deg, #a8873f 0%, #f0d99a 40%, #d9b66a 62%, #b08d4a 100%);
+    --primary: #6ccad6; --primary-strong: #8fdae3; --primary-soft: #11303a; --on-primary: #06141a;
     --danger: #f0716a; --danger-soft: #3a1d1c; --warning: #f0b14a; --warning-soft: #392b14; --success: #4fc483; --success-soft: #15321f;
-    --focus: 0 0 0 3px rgba(43, 178, 188, .35);
+    --focus: 0 0 0 3px rgba(108, 202, 214, .35);
     --shadow-1: 0 1px 2px rgba(0, 0, 0, .4); --shadow-2: 0 12px 32px rgba(0, 0, 0, .5);
     --c-sky: #5cb8f0; --c-blue: #7a9cf5; --c-green: #4fc483; --c-slate: #9aa8b6; --c-violet: #a78bfa;
     --c-pink: #f072b6; --c-amber: #f0b14a; --c-orange: #f38a55; --c-teal: #2bb2bc; --c-cyan: #4cc3e0; --c-red: #f0716a;
@@ -49,11 +56,11 @@
   }
 }
 :root[data-theme="dark"] {
-  --bg: #0e1318; --surface: #151b22; --surface-2: #1b232b; --surface-3: #232c36; --border: #27313b; --border-strong: #35414d;
-  --text: #e6ebf0; --text-2: #b4bfca; --muted: #8b98a5;
-  --primary: #2bb2bc; --primary-strong: #4cc6cf; --primary-soft: #12343a; --on-primary: #06181b;
+  --bg: #0a111b; --surface: #121c2a; --surface-2: #18243a; --surface-3: #1f2d45; --border: #24324a; --border-strong: #31425e;
+  --text: #e8eef4; --text-2: #b9c4d1; --muted: #9daaba; --void: #1c2c5a; --abyss: #050a18; --lumen: #f0bd5a; --gold: linear-gradient(160deg, #a8873f 0%, #f0d99a 40%, #d9b66a 62%, #b08d4a 100%);
+  --primary: #6ccad6; --primary-strong: #8fdae3; --primary-soft: #11303a; --on-primary: #06141a;
   --danger: #f0716a; --danger-soft: #3a1d1c; --warning: #f0b14a; --warning-soft: #392b14; --success: #4fc483; --success-soft: #15321f;
-  --focus: 0 0 0 3px rgba(43, 178, 188, .35);
+  --focus: 0 0 0 3px rgba(108, 202, 214, .35);
   --shadow-1: 0 1px 2px rgba(0, 0, 0, .4); --shadow-2: 0 12px 32px rgba(0, 0, 0, .5);
   --c-sky: #5cb8f0; --c-blue: #7a9cf5; --c-green: #4fc483; --c-slate: #9aa8b6; --c-violet: #a78bfa;
   --c-pink: #f072b6; --c-amber: #f0b14a; --c-orange: #f38a55; --c-teal: #2bb2bc; --c-cyan: #4cc3e0; --c-red: #f0716a;
@@ -91,7 +98,8 @@ kbd { font: 11px var(--mono); padding: 1px 5px; border: 1px solid var(--border-s
 .brand-mark svg { width: 36px; height: 36px; display: block; }
 .auth-card .brand-mark svg { width: 44px; height: 44px; }
 .brand-text { display: flex; flex-direction: column; line-height: 1.2; min-width: 0; }
-.brand-text strong { font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.brand-text strong { font-family: var(--display); font-weight: 600; font-size: 15px; letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gold-a { background: var(--gold); -webkit-background-clip: text; background-clip: text; color: transparent; font-weight: 700; }
 .brand-text span { font-size: 12px; color: var(--muted); }
 .nav { display: flex; flex-direction: column; gap: 2px; flex: 1; overflow-y: auto; }
 .nav-item {
@@ -147,8 +155,16 @@ kbd { font: 11px var(--mono); padding: 1px 5px; border: 1px solid var(--border-s
 }
 .btn:hover { background: var(--surface-2); }
 .btn .ic { width: 16px; height: 16px; }
-.btn-primary { background: var(--primary); border-color: var(--primary); color: var(--on-primary); }
-.btn-primary:hover { background: var(--primary-strong); border-color: var(--primary-strong); }
+.btn:hover { border-color: var(--primary); color: var(--primary-strong); }
+/* Primary: aether-strong, with a soft top light */
+.btn-primary { background: linear-gradient(180deg, color-mix(in srgb, var(--primary) 82%, #ffffff) 0%, var(--primary) 55%); border-color: var(--primary); color: var(--on-primary); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .18), 0 1px 2px rgba(7, 14, 34, .18); }
+.btn-primary:hover { background: var(--primary-strong); border-color: var(--primary-strong); color: var(--on-primary); }
+/* Brand: deep void with an aged-gold edge (the "+ New" button: one gold moment per screen) */
+.btn-brand { background: var(--void); color: var(--gold-4); border: 1px solid var(--gold-2); box-shadow: inset 0 1px 0 rgba(240, 217, 154, .18), 0 1px 3px rgba(7, 14, 34, .35); }
+.btn-brand:hover { background: var(--abyss); color: #fff4d2; border-color: var(--gold-3); }
+.btn-brand .ic { color: var(--gold-3); }
+.btn-danger:hover { color: #fff; }
+.btn-danger-ghost:hover, .btn-ghost:hover { border-color: transparent; }
 .btn-danger { background: var(--danger); border-color: var(--danger); color: #fff; }
 .btn-danger:hover { filter: brightness(.95); background: var(--danger); }
 .btn-danger-ghost { border-color: transparent; background: none; color: var(--danger); }
@@ -502,7 +518,7 @@ body.booting .app { visibility: hidden; }
 .env-switch a { padding: 5px 12px; border-radius: 999px; font-size: 12px; font-weight: 700; color: var(--text-2); text-decoration: none; transition: background .15s, color .15s; }
 .env-switch a:hover { color: var(--text); text-decoration: none; }
 .env-switch a.on { background: var(--primary); color: var(--on-primary); }
-body.demo .env-switch a.on { background: var(--warning); color: #fff; }
+body.demo .env-switch a.on { background: var(--gold); color: var(--abyss); }
 
 /* Viewers: hide create/edit controls (the database rejects writes anyway) */
 body.read-only #newMenu, body.read-only [data-act^="new"], body.read-only [data-act="logActivity"], body.read-only .quick,

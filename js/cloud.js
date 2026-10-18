@@ -145,8 +145,8 @@ const Cloud = (() => {
       el.className = 'auth-screen';
       el.innerHTML = `
         <div class="auth-card card">
-          <div class="brand"><div class="brand-mark" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true"><defs><linearGradient id="authStar" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#9fe3ec"/></linearGradient></defs><rect width="120" height="120" rx="28" fill="#0e1b3d"/><g transform="translate(12 12) scale(0.8)"><path d="M10.7 82 A54 18 -24 0 1 109.3 38" fill="none" stroke="#4fb8c6" stroke-width="5" opacity="0.4"/><path d="M60 8 Q64 56 88 60 Q64 64 60 96 Q56 64 32 60 Q56 56 60 8 Z" fill="url(#authStar)"/><path d="M109.3 38 A54 18 -24 0 1 10.7 82" fill="none" stroke="#4fb8c6" stroke-width="5"/><circle cx="41.7" cy="85.2" r="7" fill="#f0bd5a"/></g></svg></div>
-            <div class="brand-text"><strong>Aetherium</strong><span>CRM &amp; Board</span></div></div>
+          <div class="brand"><div class="brand-mark" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true"><defs><linearGradient id="authStar" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8a6a2f"/><stop offset="0.45" stop-color="#f0d99a"/><stop offset="1" stop-color="#6e5320"/></linearGradient></defs><rect width="120" height="120" rx="28" fill="#0e1b3d"/><path d="M60 26 L92 98 L80 98 L60 50 L40 98 L28 98 Z" fill="url(#authStar)"/><path d="M100 66 A44 11 -12 0 1 20 82" fill="none" stroke="#4fb8c6" stroke-width="4" stroke-linecap="round"/><path d="M60 10 Q61.5 24.5 72 26 Q61.5 27.5 60 42 Q58.5 27.5 48 26 Q58.5 24.5 60 10 Z" fill="#ffffff" stroke="#0e1b3d" stroke-width="2" paint-order="stroke"/></svg></div>
+            <div class="brand-text"><strong><span class="gold-a">A</span>etherium</strong><span>CRM &amp; Board</span></div></div>
           <h1>Sign in</h1>
           <p class="muted">Use your work email. Only people on the team list can see the data.</p>
           <form class="form-grid" novalidate>
