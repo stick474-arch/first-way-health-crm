@@ -9,7 +9,12 @@ A lightweight CRM built for a small health-services company that is starting to 
 
 No framework, no build step: plain HTML, CSS and JavaScript.
 
-**Live demo:** https://stick474-arch.github.io/first-way-health-crm/ (choose *Explore with sample data*; demo data stays in your browser).
+| Link | What it is |
+|---|---|
+| **Demo** → https://stick474-arch.github.io/first-way-health-crm/demo/ | Fictional sample company, loads instantly, no sign-in. Changes stay in your browser (*Reset demo data* in the sidebar). |
+| **Production** → https://stick474-arch.github.io/first-way-health-crm/ | The team workspace: sign-in only, Supabase database, starts blank. |
+
+Both pages run the same code. `demo/index.html` is generated from `index.html` by `node tools/sync-demo.mjs`; it never loads the Supabase config and keeps its data in separate browser storage, so demo and production can never mix.
 
 ---
 

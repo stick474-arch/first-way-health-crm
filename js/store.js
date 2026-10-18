@@ -1,7 +1,10 @@
 /* First Way Health CRM — data model, persistence (browser localStorage) and derived queries. */
 const Store = (() => {
-  const KEY = 'fwh-crm-data-v1';
-  const META_KEY = 'fwh-crm-meta';
+  // The demo page keeps its own storage so demo data never mixes with the real workspace.
+  const NS = (window.FWH_CONFIG || {}).demo ? 'fwh-demo' : 'fwh-crm';
+  const KEY = `${NS}-data-v1`;
+  const META_KEY = `${NS}-meta`;
+  const ME_KEY = `${NS}-me`;
 
   // ---- Categorization system -------------------------------------------------------------
   // Every contact has ONE type; each type belongs to ONE group. Tags, priority tier, source
@@ -204,8 +207,8 @@ const Store = (() => {
   const contactName = (c) => (c ? `${c.firstName || ''} ${c.lastName || ''}`.trim() || c.email || 'Unnamed contact' : '');
   const orgName = (id) => get('organizations', id)?.name || '';
   // "Who am I" is remembered per browser (teammates share settings in cloud mode).
-  const myId = () => { try { return localStorage.getItem('fwh-me') || ''; } catch { return ''; } };
-  const setMe = (id) => { try { localStorage.setItem('fwh-me', id); } catch { /* ignore */ } };
+  const myId = () => { try { return localStorage.getItem(ME_KEY) || ''; } catch { return ''; } };
+  const setMe = (id) => { try { localStorage.setItem(ME_KEY, id); } catch { /* ignore */ } };
   const currentUser = () => get('users', myId()) || get('users', db.settings.currentUserId) || db.users[0] || null;
 
   // Owners can be team members (users) or board members (contacts) — ids are prefixed so one lookup works.

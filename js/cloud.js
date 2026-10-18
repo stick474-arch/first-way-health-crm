@@ -3,7 +3,8 @@ const Cloud = (() => {
   const SUPABASE_JS = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js';
   const TABLE = 'crm_records';
   const cfg = window.FWH_CONFIG || {};
-  const configured = !!(cfg.supabaseUrl && cfg.supabaseAnonKey);
+  const demo = !!cfg.demo; // demo/index.html: fictional data in this browser, never touches Supabase
+  const configured = !demo && !!(cfg.supabaseUrl && cfg.supabaseAnonKey);
   const esc = U.esc;
 
   let client = null;
@@ -23,7 +24,6 @@ const Cloud = (() => {
 
   const setStatus = (state, detail = '') => { status = { state, detail }; statusListeners.forEach((fn) => fn(status)); };
   const redirectUrl = () => location.origin + location.pathname;
-  const isDemo = () => { try { return localStorage.getItem('fwh-mode') === 'demo'; } catch { return false; } };
 
   function loadScript(src) {
     return new Promise((resolve, reject) => {
@@ -160,7 +160,7 @@ const Cloud = (() => {
             <div class="auth-msg span-2" role="status">${esc(message)}</div>
           </form>
           <hr>
-          <button class="btn btn-ghost btn-block" type="button" data-mode="demo">Explore the demo instead (sample data, stays in your browser)</button>
+          <a class="btn btn-ghost btn-block" href="demo/">Looking for the demo? Open it here (fictional data)</a>
         </div>`;
       document.body.appendChild(el);
       const form = el.querySelector('form');
@@ -183,10 +183,7 @@ const Cloud = (() => {
         if (!b) return;
         e.preventDefault();
         const { email, password } = creds();
-        if (b.dataset.mode === 'demo') {
-          try { localStorage.setItem('fwh-mode', 'demo'); } catch { /* ignore */ }
-          finish('demo');
-        } else if (b.dataset.mode === 'magic') {
+        if (b.dataset.mode === 'magic') {
           if (!email) { say('Enter your email first.', true); return; }
           say('Sending…');
           const { error } = await client.auth.signInWithOtp({ email, options: { emailRedirectTo: redirectUrl() } });
@@ -218,8 +215,8 @@ const Cloud = (() => {
   // ---- Boot ------------------------------------------------------------------------------
   // Resolves with 'local' | 'demo' | 'cloud' once data is ready to render.
   async function init() {
+    if (demo) { setStatus('demo'); return 'demo'; }
     if (!configured) { setStatus('local'); return 'local'; }
-    if (isDemo()) { setStatus('demo'); return 'demo'; }
     try {
       loadingScreen('Connecting…');
       await loadScript(SUPABASE_JS);
@@ -233,9 +230,7 @@ const Cloud = (() => {
       for (;;) {
         if (!user) {
           loadingScreen('');
-          const res = await authScreen(note);
-          if (res === 'demo') { setStatus('demo'); return 'demo'; }
-          user = res;
+          user = await authScreen(note);
           loadingScreen('Loading your workspace…');
         }
         role = await fetchRole();
@@ -245,13 +240,10 @@ const Cloud = (() => {
         user = null;
       }
       loadingScreen('Loading your workspace…');
-      const localHadData = Store.recordCount() > 0 && !Store.firstRun;
-      const localSnapshot = localHadData ? Store.exportJSON() : null;
       const rows = await loadAll();
       Store.setMode('cloud');
       Store.loadRemote(rows);
       Store.setHooks({ record: (coll, id, rec) => mark(coll, id, !rec), bulk: markAll });
-      Cloud.localSnapshot = localSnapshot;
       subscribe();
       window.addEventListener('beforeunload', (e) => { if (dirty.size || flushing) { e.preventDefault(); e.returnValue = ''; } });
       window.addEventListener('online', () => scheduleFlush(100));
@@ -270,11 +262,6 @@ const Cloud = (() => {
   async function signOut() {
     if (dirty.size) await flush();
     if (client) await client.auth.signOut();
-    location.reload();
-  }
-
-  function exitDemo() {
-    try { localStorage.removeItem('fwh-mode'); } catch { /* ignore */ }
     location.reload();
   }
 
@@ -299,7 +286,7 @@ const Cloud = (() => {
   }
 
   return {
-    init, flush, signOut, exitDemo, listMembers, addMember, setMemberRole, removeMember, ROLES,
+    init, flush, signOut, listMembers, addMember, setMemberRole, removeMember, ROLES,
     onStatus: (fn) => statusListeners.push(fn),
     get status() { return status; },
     get user() { return user; },
@@ -308,6 +295,6 @@ const Cloud = (() => {
     get isAdmin() { return Store.mode !== 'cloud' || role === 'admin'; },
     get canWrite() { return Store.mode !== 'cloud' || role === 'admin' || role === 'member'; },
     get configured() { return configured; },
-    localSnapshot: null,
+    get demo() { return demo; },
   };
 })();

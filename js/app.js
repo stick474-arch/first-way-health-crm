@@ -41,7 +41,7 @@ const App = (() => {
     const stale = !cloud && S.recordCount() > 0 && (!last || U.daysFromToday(last.slice(0, 10)) < -7);
     const box = {
       local: [stale ? 'alert' : 'database', 'Saved in this browser', `Last backup: ${last ? U.relDays(last.slice(0, 10)) : 'never'}`, stale ? 'stale' : ''],
-      demo: ['database', 'Demo mode', 'Sample data, only in this browser', ''],
+      demo: ['database', 'Demo workspace', 'Fictional data, only in your browser', ''],
       synced: ['check', Cloud.canWrite ? 'Synced to the cloud' : 'View-only access', `${Cloud.user?.email || ''}${Cloud.role ? ` · ${Cloud.role}` : ''}`, 'ok'],
       saving: ['clock', 'Saving…', Cloud.user?.email || '', ''],
       error: ['alert', cloud ? 'Sync error, retrying' : 'Cloud unavailable', st.detail, 'stale'],
@@ -51,8 +51,9 @@ const App = (() => {
         ${UI.icon(box[0])}
         <div><strong>${esc(box[1])}</strong><span>${esc(box[2])}</span></div>
       </div>
-      ${st.state === 'demo' ? `<button class="btn btn-sm btn-block btn-primary" data-act="exitDemo">Sign in to your workspace</button>` : ''}
-      <button class="btn btn-sm btn-block" data-act="exportBackup">${UI.icon('download')} ${cloud ? 'Download backup' : 'Back up now'}</button>
+      ${st.state === 'demo'
+        ? `<button class="btn btn-sm btn-block" data-act="resetDemo">${UI.icon('database')} Reset demo data</button>`
+        : `<button class="btn btn-sm btn-block" data-act="exportBackup">${UI.icon('download')} ${cloud ? 'Download backup' : 'Back up now'}</button>`}
       <div class="me">${S.currentUser() ? `${UI.avatar(S.currentUser().name, 'sm')}<span>${esc(S.currentUser().name)}</span>` : ''}</div>`;
   }
 
@@ -222,7 +223,11 @@ const App = (() => {
     toggleTheme,
     toggleNewMenu: () => toggleNewMenu(),
     exportBackup,
-    exitDemo: () => Cloud.exitDemo(),
+    resetDemo: async () => {
+      if (!(await UI.confirm('Reset the demo to its original sample data? Your changes in this demo will be lost.', { okText: 'Reset demo', danger: false }))) return;
+      loadDemoData();
+      UI.toast('Demo data reset', 'success');
+    },
   };
 
   document.addEventListener('click', (e) => {
@@ -266,31 +271,28 @@ const App = (() => {
   function onboarding() {
     let done = false;
     const cloud = S.mode === 'cloud';
-    const starts = cloud
-      ? [{ value: 'empty', label: 'Start with an empty workspace (recommended)' }, { value: 'sample', label: 'Load sample data to try it out (erase it later in Settings)' }]
-      : [{ value: 'sample', label: 'Explore with sample data (you can erase it later in Settings)' }, { value: 'empty', label: 'Start with an empty workspace' }];
-    if (cloud && Cloud.localSnapshot) starts.push({ value: 'upload', label: 'Upload the data already saved in this browser' });
+    const starts = [{ value: 'empty', label: 'Start with an empty workspace' }, { value: 'sample', label: 'Explore with sample data (you can erase it later in Settings)' }];
+    const tagLabel = 'Add starter tags (Role: Decision maker, Champion… · Segment · Expertise). You can edit them in Settings.';
     UI.formModal({
       title: 'Welcome to your CRM & Board workspace',
       size: 'md',
       submitText: 'Get started',
       intro: cloud
-        ? 'This shared workspace is empty. Everything you add is saved to your team’s Supabase database and appears for teammates in real time.'
+        ? 'Your team workspace starts blank. Everything you add is saved to your Supabase database and appears for teammates in real time.'
         : 'Track clients and leads, categorize every contact, and run your board of directors in one place. Your data is stored <b>in this browser</b>; use <b>Back up now</b> regularly.',
       values: { companyName: 'First Way Health', start: starts[0].value, yourName: Cloud.user?.email?.split('@')[0] || '', starterTags: true },
       fields: [
         { name: 'yourName', label: 'Your name', required: true, span: 2 },
         { name: 'companyName', label: 'Company', required: true, span: 2 },
-        { name: 'start', label: 'How do you want to start?', type: 'select', span: 2, options: starts },
-        { name: 'starterTags', type: 'checkbox', span: 2, showWhen: 'start:empty', checkLabel: 'Add starter tags (Role: Decision maker, Champion… · Segment · Expertise). You can edit them in Settings.' },
+        ...(cloud
+          ? [{ name: 'starterTags', type: 'checkbox', span: 2, checkLabel: tagLabel }]
+          : [{ name: 'start', label: 'How do you want to start?', type: 'select', span: 2, options: starts },
+            { name: 'starterTags', type: 'checkbox', span: 2, showWhen: 'start:empty', checkLabel: tagLabel }]),
       ],
       onSubmit: (d) => {
         done = true;
         S.firstRun = false;
-        if (d.start === 'upload') {
-          S.importJSON(Cloud.localSnapshot);
-          UI.toast('Browser data uploaded to the cloud workspace', 'success');
-        } else if (d.start === 'sample') {
+        if (!cloud && d.start === 'sample') {
           const data = Sample.build(d.yourName);
           data.settings.companyName = d.companyName;
           data.users[0].email = Cloud.user?.email || '';
@@ -319,6 +321,13 @@ const App = (() => {
     });
   }
 
+  function loadDemoData() {
+    const data = Sample.build('Alex Rivera');
+    S.replaceAll(data);
+    S.setMe(data.users[0].id);
+    S.firstRun = false;
+  }
+
   // ---- Boot ------------------------------------------------------------------------------
   async function boot() {
     $('#menuBtn').innerHTML = UI.icon('menu');
@@ -340,6 +349,14 @@ const App = (() => {
       S.setMe(me.id);
     }
     if (!Cloud.canWrite) document.body.classList.add('read-only');
+    if (Cloud.demo) {
+      document.body.classList.add('demo');
+      $('#searchWrap').insertAdjacentHTML('afterend', '<span class="demo-pill" title="Fictional data that stays in your browser">Demo · fictional data</span>');
+      if (S.firstRun) {
+        loadDemoData();
+        UI.toast('Welcome to the demo. Everything here is fictional and stays in your browser.', 'info', { duration: 7000 });
+      }
+    }
     Cloud.onStatus(() => renderFoot());
     S.onChange(rerender);
     window.addEventListener('hashchange', () => { UI.closeMenu(); render(); });

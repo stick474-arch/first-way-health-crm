@@ -499,6 +499,9 @@ body.booting .app { visibility: hidden; }
 .backup.ok strong { color: var(--success); }
 .member-list .list-item { padding: 8px 0; flex-wrap: wrap; }
 
+.demo-pill { flex: none; font-size: 12px; font-weight: 700; color: var(--warning); background: var(--warning-soft); border-radius: 999px; padding: 5px 10px; white-space: nowrap; }
+@media (max-width: 560px) { .demo-pill { display: none; } }
+
 /* Viewers: hide create/edit controls (the database rejects writes anyway) */
 body.read-only #newMenu, body.read-only [data-act^="new"], body.read-only [data-act="logActivity"], body.read-only .quick,
 body.read-only .agenda-tools, body.read-only [data-act="minutesDraft"], body.read-only [data-act="attAll"], body.read-only [data-act="mtgStatus"],

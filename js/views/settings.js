@@ -37,9 +37,9 @@ Views.settings = (() => {
         </div></div>`;
     }
     if (st === 'demo') {
-      return `<div class="card"><div class="card-head"><h2>${UI.icon('database')} Demo mode</h2></div><div class="card-body">
-        <p>You are exploring with data stored only in this browser. Sign in to use your team’s shared cloud workspace.</p>
-        <button class="btn btn-primary" data-act="exitDemo">Sign in</button></div></div>`;
+      return `<div class="card"><div class="card-head"><h2>${UI.icon('database')} Demo workspace</h2></div><div class="card-body">
+        <p>Everything here is fictional and saved only in your browser. Nothing is sent to a server, and the real team workspace is a separate, sign-in-only page.</p>
+        <button class="btn" data-act="resetDemo">Reset demo data</button></div></div>`;
     }
     return `<div class="card"><div class="card-head"><h2>${UI.icon('database')} Storage: this browser</h2></div><div class="card-body">
       <p>Data is saved only in this browser on this computer. That is fine to start, but back up often.</p>
@@ -98,7 +98,7 @@ Views.settings = (() => {
             <p class="help" style="margin-top:8px">CSV exports for spreadsheets are on the Contacts, Organizations, Activity log and Resolutions pages.</p>
             ${Cloud.isAdmin ? `<hr>
             <div class="data-actions">
-              <button class="btn" data-act="loadSample">Replace with sample data</button>
+              ${S.mode !== 'cloud' && !Cloud.demo ? '<button class="btn" data-act="loadSample">Replace with sample data</button>' : ''}
               <button class="btn btn-danger-ghost" data-act="eraseAll">${UI.icon('trash')}Erase everything</button>
             </div>` : '<p class="help">Restore, sample data and erase are admin-only.</p>'}
           </div></div>
