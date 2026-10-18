@@ -96,6 +96,7 @@ Views.settings = (() => {
               ${Cloud.isAdmin ? `<label class="btn">${UI.icon('upload')}Restore from backup<input type="file" accept="application/json,.json" id="restoreFile" hidden></label>` : ''}
             </div>
             <p class="help" style="margin-top:8px">CSV exports for spreadsheets are on the Contacts, Organizations, Activity log and Resolutions pages.</p>
+            ${S.mode === 'cloud' && Cloud.browserData() ? `<div class="banner info" style="margin-top:10px">${UI.icon('database')}<div><b>This browser still has ${Cloud.browserData().count} records from before the cloud</b>${Cloud.browserData().people.length ? ` (team: ${esc(Cloud.browserData().people.join(', '))})` : ''}. Download them, then use <b>Restore from backup</b> to bring them into the team workspace (restoring replaces what is there).<div style="margin-top:8px"><button class="btn btn-sm" data-act="downloadBrowserData">${UI.icon('download')}Download browser data</button></div></div></div>` : ''}
             ${Cloud.isAdmin ? `<hr>
             <div class="data-actions">
               ${S.mode !== 'cloud' && !Cloud.demo ? '<button class="btn" data-act="loadSample">Replace with sample data</button>' : ''}
@@ -172,6 +173,7 @@ Views.settings = (() => {
         UI.toast('Workspace erased');
       },
       signOut: () => Cloud.signOut(),
+      downloadBrowserData: () => Cloud.downloadBrowserData(),
       removeMember: async (ds) => {
         if (!(await UI.confirm(`Remove ${ds.email} from team access? They will no longer be able to see any data.`, { okText: 'Remove access' }))) return;
         try { await Cloud.removeMember(ds.email); UI.toast('Access removed'); await loadMembers(); } catch (e) { UI.toast(e.message, 'error'); }

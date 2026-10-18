@@ -259,7 +259,25 @@ const Cloud = (() => {
     }
   }
 
+  // Data an earlier version saved in this browser (before Supabase worked). Kept so it can be recovered.
+  function browserData() {
+    try {
+      const d = JSON.parse(localStorage.getItem('fwh-crm-data-v1') || 'null');
+      if (!d) return null;
+      const count = ['contacts', 'organizations', 'deals', 'activities', 'tasks', 'meetings', 'resolutions', 'users']
+        .reduce((n, c) => n + (Array.isArray(d[c]) ? d[c].length : 0), 0);
+      return count ? { data: d, count, people: (d.users || []).map((u) => u.name).filter(Boolean) } : null;
+    } catch { return null; }
+  }
+  function downloadBrowserData() {
+    const b = browserData();
+    if (!b) { UI.toast('Nothing is saved in this browser', 'info'); return; }
+    U.download(`aetherium-browser-data-${U.today()}.json`, JSON.stringify({ app: 'first-way-health-crm', exportedAt: new Date().toISOString(), data: b.data }, null, 2), 'application/json');
+    UI.toast('Downloaded. Once the cloud works, an admin restores it in Settings → Data.', 'success', { duration: 7000 });
+  }
+
   function unavailableScreen(reason) {
+    const saved = browserData();
     const el = document.createElement('div');
     el.className = 'auth-screen';
     el.innerHTML = `
@@ -272,6 +290,8 @@ const Cloud = (() => {
           <button class="btn btn-primary" type="button" data-u="retry">Try again</button>
           ${user ? '<button class="btn" type="button" data-u="signout">Sign out</button>' : ''}
         </div>
+        ${saved ? `<div class="banner info" style="margin-top:16px">${UI.icon('database')}<div><b>This browser still has ${saved.count} records</b> saved by an earlier version${saved.people.length ? ` (team: ${esc(saved.people.join(', '))})` : ''}. Download them to restore into the team workspace later.
+          <div style="margin-top:8px"><button class="btn btn-sm" type="button" data-u="download">${UI.icon('download')}Download browser data</button></div></div></div>` : ''}
         <hr>
         <a class="btn btn-ghost btn-block" href="demo/">Open the demo instead (fictional data)</a>
       </div>`;
@@ -279,6 +299,7 @@ const Cloud = (() => {
     el.addEventListener('click', async (e) => {
       const b = e.target.closest('[data-u]');
       if (!b) return;
+      if (b.dataset.u === 'download') { downloadBrowserData(); return; }
       if (b.dataset.u === 'signout' && client) await client.auth.signOut();
       location.reload();
     });
@@ -312,7 +333,7 @@ const Cloud = (() => {
   }
 
   return {
-    init, flush, signOut, listMembers, addMember, setMemberRole, removeMember, ROLES,
+    init, flush, signOut, listMembers, addMember, setMemberRole, removeMember, ROLES, browserData, downloadBrowserData,
     onStatus: (fn) => statusListeners.push(fn),
     get status() { return status; },
     get user() { return user; },
