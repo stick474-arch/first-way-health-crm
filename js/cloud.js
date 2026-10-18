@@ -145,7 +145,7 @@ const Cloud = (() => {
       el.className = 'auth-screen';
       el.innerHTML = `
         <div class="auth-card card">
-          <div class="brand"><div class="brand-mark" aria-hidden="true"><svg viewBox="0 0 32 32"><rect width="32" height="32" rx="8"/><path d="M16 8v16M8 16h16"/></svg></div>
+          <div class="brand"><div class="brand-mark" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true"><defs><linearGradient id="authStar" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#9fe3ec"/></linearGradient></defs><rect width="120" height="120" rx="28" fill="#0e1b3d"/><g transform="translate(12 12) scale(0.8)"><path d="M10.7 82 A54 18 -24 0 1 109.3 38" fill="none" stroke="#4fb8c6" stroke-width="5" opacity="0.4"/><path d="M60 8 Q64 56 88 60 Q64 64 60 96 Q56 64 32 60 Q56 56 60 8 Z" fill="url(#authStar)"/><path d="M109.3 38 A54 18 -24 0 1 10.7 82" fill="none" stroke="#4fb8c6" stroke-width="5"/><circle cx="41.7" cy="85.2" r="7" fill="#f0bd5a"/></g></svg></div>
             <div class="brand-text"><strong>Aetherium</strong><span>CRM &amp; Board</span></div></div>
           <h1>Sign in</h1>
           <p class="muted">Use your work email. Only people on the team list can see the data.</p>

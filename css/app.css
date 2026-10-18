@@ -88,9 +88,8 @@ kbd { font: 11px var(--mono); padding: 1px 5px; border: 1px solid var(--border-s
   position: sticky; top: 0; height: 100vh; display: flex; flex-direction: column; padding: 16px 12px; z-index: 30;
 }
 .brand { display: flex; align-items: center; gap: 10px; padding: 4px 8px 18px; }
-.brand-mark svg { width: 34px; height: 34px; display: block; }
-.brand-mark rect { fill: var(--primary); }
-.brand-mark path { stroke: var(--surface); stroke-width: 4; stroke-linecap: round; fill: none; }
+.brand-mark svg { width: 36px; height: 36px; display: block; }
+.auth-card .brand-mark svg { width: 44px; height: 44px; }
 .brand-text { display: flex; flex-direction: column; line-height: 1.2; min-width: 0; }
 .brand-text strong { font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .brand-text span { font-size: 12px; color: var(--muted); }
