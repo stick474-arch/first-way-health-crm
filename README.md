@@ -1,4 +1,6 @@
-# First Way Health · CRM & Board
+# Aetherium · CRM & Board
+
+> *Aetherium* comes from **Aether**, the mythological element that filled the empty space of the universe and let light travel. The name says what the company aims to be: the invisible channel through which information and work flow.
 
 A lightweight CRM built for a small health-services company that is starting to win its first clients — and that also needs to run its **board of directors** properly from day one.
 
@@ -76,7 +78,7 @@ Why Supabase over Firebase for this app: the data is relational (contacts ↔ or
 2. **SQL Editor → New query**: paste [`supabase/schema.sql`](supabase/schema.sql) and run it.
 3. Add the first admin(s) (edit the email and run):
    ```sql
-   insert into public.crm_members (email, role) values ('you@firstwayhealth.com', 'admin')
+   insert into public.crm_members (email, role) values ('you@aetherium.com', 'admin')
    on conflict (email) do update set role = 'admin';
    ```
 4. **Authentication → URL Configuration**: set *Site URL* to your app URL (e.g. `https://stick474-arch.github.io/first-way-health-crm/`) and add it to *Redirect URLs* (add `http://localhost:5173` too for local testing).

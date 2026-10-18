@@ -1,4 +1,4 @@
-/* First Way Health CRM — pieces of markup reused by several pages. */
+/* Aetherium CRM — pieces of markup reused by several pages. */
 const Parts = (() => {
   const S = Store;
   const esc = U.esc;

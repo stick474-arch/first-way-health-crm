@@ -116,7 +116,7 @@ Views.settings = (() => {
         await loadMembers();
         return;
       }
-      if (t.dataset.setting) { S.setSettings({ [t.dataset.setting]: t.value.trim() || 'First Way Health' }); UI.toast('Saved', 'success'); }
+      if (t.dataset.setting) { S.setSettings({ [t.dataset.setting]: t.value.trim() || 'Aetherium' }); UI.toast('Saved', 'success'); }
       else if (t.dataset.me !== undefined) { S.setMe(t.value); if (S.mode !== 'cloud') S.setSettings({ currentUserId: t.value }); else App.rerender(); UI.toast('Saved', 'success'); }
       else if (t.dataset.cadence) { S.setSettings({ cadence: { ...S.settings.cadence, [t.dataset.cadence]: Math.max(0, Number(t.value) || 0) } }, { silent: true }); UI.toast(`Cadence for ${t.dataset.cadence} saved`, 'success'); }
       else if (t.id === 'restoreFile' && t.files[0]) {

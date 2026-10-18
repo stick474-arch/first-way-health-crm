@@ -1,4 +1,4 @@
-/* First Way Health CRM — create/edit flows shared by every view (contacts, orgs, deals, activities, tasks, board). */
+/* Aetherium CRM — create/edit flows shared by every view (contacts, orgs, deals, activities, tasks, board). */
 const Actions = (() => {
   const S = Store;
   const go = (hash) => { location.hash = hash; };

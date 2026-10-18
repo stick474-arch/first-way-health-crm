@@ -7,7 +7,7 @@ const root = fileURLToPath(new URL('..', import.meta.url));
 let html = await readFile(`${root}index.html`, 'utf8');
 
 html = html
-  .replace('<title>First Way Health · CRM & Board</title>', '<title>Demo · First Way Health CRM & Board</title>')
+  .replace('<title>Aetherium · CRM & Board</title>', '<title>Demo · Aetherium CRM & Board</title>')
   .replace(/(href|src)="(css|js)\//g, '$1="../$2/')
   .replace(/ *<!-- Production entry[^\n]*-->\n/, '')
   .replace('<script src="../js/config.js"></script>',

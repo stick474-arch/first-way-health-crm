@@ -1,5 +1,5 @@
 -- =====================================================================================
--- First Way Health CRM & Board — Supabase schema
+-- Aetherium CRM & Board — Supabase schema
 -- Run in: Supabase dashboard → SQL Editor → New query → paste → Run.
 -- Safe to re-run (idempotent): re-run it after pulling a new version of the app.
 -- =====================================================================================

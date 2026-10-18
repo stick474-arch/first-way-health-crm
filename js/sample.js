@@ -1,4 +1,4 @@
-/* First Way Health CRM — realistic sample data, dated relative to today so it never looks stale. */
+/* Aetherium CRM — realistic sample data, dated relative to today so it never looks stale. */
 const Sample = (() => {
   function build(yourName) {
     const d = Store.defaults();
@@ -14,8 +14,8 @@ const Sample = (() => {
 
     // Team
     const me = mk('users', { name: yourName || 'You', email: '', role: 'Founder & CEO' });
-    const jordan = mk('users', { name: 'Jordan Ellis', email: 'jordan@firstwayhealth.com', role: 'Business Development' });
-    const taylor = mk('users', { name: 'Taylor Brooks', email: 'taylor@firstwayhealth.com', role: 'Operations' });
+    const jordan = mk('users', { name: 'Jordan Ellis', email: 'jordan@aetherium.com', role: 'Business Development' });
+    const taylor = mk('users', { name: 'Taylor Brooks', email: 'taylor@aetherium.com', role: 'Operations' });
     d.settings.currentUserId = me.id;
 
     // Tags — "Group: value" keeps the list short and searchable
@@ -57,7 +57,7 @@ const Sample = (() => {
     const board = (role, committees, termStart, termEnd, extra = {}) => ({ role, committees, termStart, termEnd, voting: true, independent: false, coi: '', ...extra });
     const dana = con('Dana', 'Whitfield', 'Retired hospital COO', '', 'Board Member', { priority: 'A', source: 'Board introduction', tags: [tg['Clinical']],
       board: board('Chair', ['Governance & Nominating'], day(-400), day(700), { independent: true }) });
-    const marcus = con('Marcus', 'Lee', 'Co-founder & COO, First Way Health', '', 'Board Member', { priority: 'A', source: 'Other',
+    const marcus = con('Marcus', 'Lee', 'Co-founder & COO, Aetherium', '', 'Board Member', { priority: 'A', source: 'Other',
       board: board('Secretary', [], day(-400), day(700)) });
     const priya = con('Priya', 'Raman', 'CFO, regional health system', '', 'Board Member', { priority: 'A', source: 'Board introduction', tags: [tg['Finance']],
       board: board('Treasurer', ['Audit & Finance', 'Compensation'], day(-700), day(55), { independent: true, coi: `${day(-200)}: Disclosed advisory role at a regional payer; recuses from payer contract votes.` }) });

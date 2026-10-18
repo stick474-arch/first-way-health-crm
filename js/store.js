@@ -1,4 +1,4 @@
-/* First Way Health CRM — data model, persistence (browser localStorage) and derived queries. */
+/* Aetherium CRM — data model, persistence (browser localStorage) and derived queries. */
 const Store = (() => {
   // The demo page keeps its own storage so demo data never mixes with the real workspace.
   const NS = (window.FWH_CONFIG || {}).demo ? 'fwh-demo' : 'fwh-crm';
@@ -81,7 +81,7 @@ const Store = (() => {
   const defaults = () => ({
     version: 1,
     settings: {
-      companyName: 'First Way Health',
+      companyName: 'Aetherium',
       currentUserId: '',
       sources: ['Referral', 'Website', 'LinkedIn', 'Event / conference', 'Cold outreach', 'Partner', 'Board introduction', 'Other'],
       industries: ['Primary care clinic', 'Specialty practice', 'Hospital / health system', 'Employer (wellness benefits)',
@@ -100,6 +100,7 @@ const Store = (() => {
     const out = { ...base, ...d, settings: { ...base.settings, ...(d.settings || {}) } };
     out.settings.cadence = { ...base.settings.cadence, ...((d.settings || {}).cadence || {}) };
     COLLECTIONS.forEach((c) => { if (!Array.isArray(out[c])) out[c] = []; });
+    if (out.settings.companyName === 'First Way Health') out.settings.companyName = 'Aetherium';
     out.version = 1;
     return out;
   }
@@ -356,7 +357,7 @@ const Store = (() => {
   function importJSON(text) {
     const parsed = JSON.parse(text);
     const d = parsed && parsed.data ? parsed.data : parsed;
-    if (!d || !Array.isArray(d.contacts) || !d.settings) throw new Error('This file is not a First Way Health backup.');
+    if (!d || !Array.isArray(d.contacts) || !d.settings) throw new Error('This file is not a Aetherium backup.');
     replaceAll(d);
   }
 

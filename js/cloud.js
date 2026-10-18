@@ -1,4 +1,4 @@
-/* First Way Health CRM — optional Supabase backend: sign-in, team allowlist, record sync and realtime. */
+/* Aetherium CRM — optional Supabase backend: sign-in, team allowlist, record sync and realtime. */
 const Cloud = (() => {
   const SUPABASE_JS = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js';
   const TABLE = 'crm_records';
@@ -146,7 +146,7 @@ const Cloud = (() => {
       el.innerHTML = `
         <div class="auth-card card">
           <div class="brand"><div class="brand-mark" aria-hidden="true"><svg viewBox="0 0 32 32"><rect width="32" height="32" rx="8"/><path d="M16 8v16M8 16h16"/></svg></div>
-            <div class="brand-text"><strong>First Way Health</strong><span>CRM &amp; Board</span></div></div>
+            <div class="brand-text"><strong>Aetherium</strong><span>CRM &amp; Board</span></div></div>
           <h1>Sign in</h1>
           <p class="muted">Use your work email. Only people on the team list can see the data.</p>
           <form class="form-grid" novalidate>

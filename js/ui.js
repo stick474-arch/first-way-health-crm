@@ -1,4 +1,4 @@
-/* First Way Health CRM — UI building blocks: icons, badges, toasts, modals, forms, menus. */
+/* Aetherium CRM — UI building blocks: icons, badges, toasts, modals, forms, menus. */
 const UI = (() => {
   const esc = U.esc;
   const $ = (s, root = document) => root.querySelector(s);

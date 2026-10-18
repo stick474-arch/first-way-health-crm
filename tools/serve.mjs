@@ -22,4 +22,4 @@ createServer(async (req, res) => {
   } catch {
     res.writeHead(404, { 'Content-Type': 'text/plain' }).end('Not found');
   }
-}).listen(port, () => console.log(`First Way Health CRM → http://localhost:${port}`));
+}).listen(port, () => console.log(`Aetherium CRM → http://localhost:${port}`));

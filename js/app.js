@@ -1,4 +1,4 @@
-/* First Way Health CRM — shell: routing, navigation, global search, shortcuts, theme, onboarding. */
+/* Aetherium CRM — shell: routing, navigation, global search, shortcuts, theme, onboarding. */
 const App = (() => {
   const S = Store;
   const esc = U.esc;
@@ -29,7 +29,7 @@ const App = (() => {
     $('#nav').innerHTML = NAV.map((n) => (n.sep !== undefined
       ? `<div class="nav-sep">${esc(n.sep)}</div>`
       : `<a href="#/${n.id}" class="nav-item ${current.name === n.id ? 'active' : ''}" ${current.name === n.id ? 'aria-current="page"' : ''}>${UI.icon(n.icon)}<span>${esc(n.label)}</span>${counts[n.id] || ''}</a>`)).join('');
-    $('#brandName').textContent = S.settings.companyName || 'First Way Health';
+    $('#brandName').textContent = S.settings.companyName || 'Aetherium';
 
     renderFoot();
   }
@@ -76,7 +76,7 @@ const App = (() => {
     renderNav();
     document.body.classList.remove('sidebar-open');
     const label = NAV.find((n) => n.id === route.name)?.label || '';
-    document.title = `${label} · ${S.settings.companyName || 'First Way Health'}`;
+    document.title = `${label} · ${S.settings.companyName || 'Aetherium'}`;
     if (changed && !keepScroll) window.scrollTo(0, 0); else window.scrollTo(0, y);
   }
 
@@ -198,7 +198,7 @@ const App = (() => {
 
   // ---- Backup ----------------------------------------------------------------------------
   function exportBackup() {
-    U.download(`first-way-health-backup-${U.today()}.json`, S.exportJSON(), 'application/json');
+    U.download(`aetherium-backup-${U.today()}.json`, S.exportJSON(), 'application/json');
     S.setMeta({ lastBackup: U.now() });
     renderNav();
     UI.toast('Backup downloaded. Keep it in a shared drive.', 'success');
@@ -280,7 +280,7 @@ const App = (() => {
       intro: cloud
         ? 'Your team workspace starts blank. Everything you add is saved to your Supabase database and appears for teammates in real time.'
         : 'Track clients and leads, categorize every contact, and run your board of directors in one place. Your data is stored <b>in this browser</b>; use <b>Back up now</b> regularly.',
-      values: { companyName: 'First Way Health', start: starts[0].value, yourName: Cloud.user?.email?.split('@')[0] || '', starterTags: true },
+      values: { companyName: 'Aetherium', start: starts[0].value, yourName: Cloud.user?.email?.split('@')[0] || '', starterTags: true },
       fields: [
         { name: 'yourName', label: 'Your name', required: true, span: 2 },
         { name: 'companyName', label: 'Company', required: true, span: 2 },

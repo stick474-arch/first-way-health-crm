@@ -1,4 +1,4 @@
-/* First Way Health CRM — small shared helpers (no dependencies). */
+/* Aetherium CRM — small shared helpers (no dependencies). */
 const Views = {}; // each file in js/views registers one page here
 
 const U = (() => {
