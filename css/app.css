@@ -499,8 +499,11 @@ body.booting .app { visibility: hidden; }
 .backup.ok strong { color: var(--success); }
 .member-list .list-item { padding: 8px 0; flex-wrap: wrap; }
 
-.demo-pill { flex: none; font-size: 12px; font-weight: 700; color: var(--warning); background: var(--warning-soft); border-radius: 999px; padding: 5px 10px; white-space: nowrap; }
-@media (max-width: 560px) { .demo-pill { display: none; } }
+.env-switch { flex: none; display: inline-flex; padding: 3px; gap: 2px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 999px; }
+.env-switch a { padding: 5px 12px; border-radius: 999px; font-size: 12px; font-weight: 700; color: var(--text-2); text-decoration: none; transition: background .15s, color .15s; }
+.env-switch a:hover { color: var(--text); text-decoration: none; }
+.env-switch a.on { background: var(--primary); color: var(--on-primary); }
+body.demo .env-switch a.on { background: var(--warning); color: #fff; }
 
 /* Viewers: hide create/edit controls (the database rejects writes anyway) */
 body.read-only #newMenu, body.read-only [data-act^="new"], body.read-only [data-act="logActivity"], body.read-only .quick,

@@ -349,9 +349,13 @@ const App = (() => {
       S.setMe(me.id);
     }
     if (!Cloud.canWrite) document.body.classList.add('read-only');
+    // Demo ⇄ Prod switch (same app, two links)
+    $('#searchWrap').insertAdjacentHTML('afterend', `<nav class="env-switch" aria-label="Switch workspace">
+      <a href="${Cloud.demo ? '#' : 'demo/'}" class="${Cloud.demo ? 'on' : ''}" ${Cloud.demo ? 'aria-current="page"' : ''} title="Fictional data, stays in your browser">Demo</a>
+      <a href="${Cloud.demo ? '../' : '#'}" class="${Cloud.demo ? '' : 'on'}" ${Cloud.demo ? '' : 'aria-current="page"'} title="Team workspace (sign-in)">Prod</a></nav>`);
     if (Cloud.demo) {
       document.body.classList.add('demo');
-      $('#searchWrap').insertAdjacentHTML('afterend', '<span class="demo-pill" title="Fictional data that stays in your browser">Demo · fictional data</span>');
+
       if (S.firstRun) {
         loadDemoData();
         UI.toast('Welcome to the demo. Everything here is fictional and stays in your browser.', 'info', { duration: 7000 });
