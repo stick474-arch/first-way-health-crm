@@ -497,7 +497,14 @@ body.booting .app { visibility: hidden; }
 @keyframes spin { to { transform: rotate(360deg); } }
 .backup.ok { color: var(--success); }
 .backup.ok strong { color: var(--success); }
-.member-list .list-item { padding: 8px 0; }
+.member-list .list-item { padding: 8px 0; flex-wrap: wrap; }
+
+/* Viewers: hide create/edit controls (the database rejects writes anyway) */
+body.read-only #newMenu, body.read-only [data-act^="new"], body.read-only [data-act="logActivity"], body.read-only .quick,
+body.read-only .agenda-tools, body.read-only [data-act="minutesDraft"], body.read-only [data-act="attAll"], body.read-only [data-act="mtgStatus"],
+body.read-only [data-act="saveLists"], body.read-only .tl-actions, body.read-only .kcard select { display: none !important; }
+body.read-only .task-check, body.read-only .att-toggle { pointer-events: none; opacity: .55; }
+body.read-only .kcard { cursor: default; }
 
 /* ---- Printable minutes --------------------------------------------------------------- */
 #printArea { display: none; }

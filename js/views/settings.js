@@ -7,17 +7,32 @@ Views.settings = (() => {
   function cloudCard() {
     const st = Cloud.status.state;
     if (S.mode === 'cloud') {
+      const meEmail = (Cloud.user?.email || '').toLowerCase();
+      const roleColor = { admin: 'teal', member: 'blue', viewer: 'slate' };
+      const roleOpts = Cloud.ROLES.map((r) => ({ value: r.id, label: `${r.label} — ${r.hint}` }));
       const list = members === null ? '<div class="empty-sm">Loading…</div>'
-        : members.map((m) => `<div class="list-item"><div class="li-main"><b>${esc(m.email)}</b><small>${esc(m.role || 'member')} · added ${esc(U.fmtDate((m.added_at || '').slice(0, 10)))}</small></div>
-          <div class="li-side">${m.email === (Cloud.user?.email || '').toLowerCase() ? UI.badge('You', 'teal') : `<button class="btn btn-sm btn-danger-ghost" data-act="removeMember" data-email="${esc(m.email)}">Remove</button>`}</div></div>`).join('');
+        : members.map((m) => {
+          const self = m.email === meEmail;
+          return `<div class="list-item"><div class="li-main"><b>${esc(m.email)}</b><small>added ${esc(U.fmtDate((m.added_at || '').slice(0, 10)))}</small></div>
+          <div class="li-side">
+            ${Cloud.isAdmin && !self
+              ? `<select class="select" data-member-role="${esc(m.email)}" aria-label="Role for ${esc(m.email)}">${UI.selectOptions(Cloud.ROLES.map((r) => ({ value: r.id, label: r.label })), m.role)}</select>
+                 <button class="btn btn-sm btn-danger-ghost" data-act="removeMember" data-email="${esc(m.email)}">Remove</button>`
+              : `${UI.badge(Cloud.ROLES.find((r) => r.id === m.role)?.label || m.role, roleColor[m.role] || 'slate')}${self ? UI.badge('You', 'teal') : ''}`}
+          </div></div>`;
+        }).join('');
       return `<div class="card"><div class="card-head"><h2>${UI.icon('database')} Cloud workspace (Supabase)</h2><div class="right">${UI.badge(st === 'error' ? 'Sync error' : st === 'saving' ? 'Saving…' : 'Synced', st === 'error' ? 'red' : 'green')}</div></div>
         <div class="card-body">
-          <p>Signed in as <b>${esc(Cloud.user?.email || '')}</b>. Changes save automatically and appear for teammates in real time.</p>
+          <p>Signed in as <b>${esc(Cloud.user?.email || '')}</b> · role <b>${esc(Cloud.ROLES.find((r) => r.id === Cloud.role)?.label || Cloud.role || '')}</b>. Changes save automatically and appear for teammates in real time.</p>
           ${st === 'error' ? `<div class="banner danger">${UI.icon('alert')}<div>${esc(Cloud.status.detail)}</div></div>` : ''}
           <h3 style="font-size:14px;margin:14px 0 4px">Team access</h3>
-          <p class="muted small">Only these emails can sign in and see data (enforced by Row Level Security in the database). After you add someone, they open the app and choose “Create your account” or “Email me a sign-in link”.</p>
+          <p class="muted small">Only these emails can sign in and see data, enforced by Row Level Security in the database. <b>Admin</b>: everything plus team access · <b>Member</b>: read and edit all data · <b>Viewer</b>: read-only.
+            ${Cloud.isAdmin ? 'After you add someone, they open the app and choose “Create your account” with that email.' : 'Only admins can change team access.'}</p>
           <div class="list member-list">${list}</div>
-          <form class="row" id="addMemberForm" style="margin-top:10px"><input class="input" type="email" name="email" placeholder="teammate@company.com" aria-label="Email to allow" required><button class="btn" type="submit">${UI.icon('plus')}Allow</button></form>
+          ${Cloud.isAdmin ? `<form class="row wrap" id="addMemberForm" style="margin-top:10px">
+            <input class="input" style="flex:1;min-width:200px" type="email" name="email" placeholder="teammate@company.com" aria-label="Email to allow" required>
+            <select class="select" name="role" aria-label="Role">${UI.selectOptions(roleOpts, 'member')}</select>
+            <button class="btn" type="submit">${UI.icon('plus')}Allow</button></form>` : ''}
           <div class="row" style="margin-top:14px"><button class="btn btn-sm" data-act="signOut">Sign out</button></div>
         </div></div>`;
     }
@@ -78,14 +93,14 @@ Views.settings = (() => {
           <div class="card"><div class="card-head"><h2>Data</h2></div><div class="card-body">
             <div class="data-actions">
               <button class="btn" data-act="exportBackup">${UI.icon('download')}Download backup (JSON)</button>
-              <label class="btn">${UI.icon('upload')}Restore from backup<input type="file" accept="application/json,.json" id="restoreFile" hidden></label>
+              ${Cloud.isAdmin ? `<label class="btn">${UI.icon('upload')}Restore from backup<input type="file" accept="application/json,.json" id="restoreFile" hidden></label>` : ''}
             </div>
             <p class="help" style="margin-top:8px">CSV exports for spreadsheets are on the Contacts, Organizations, Activity log and Resolutions pages.</p>
-            <hr>
+            ${Cloud.isAdmin ? `<hr>
             <div class="data-actions">
               <button class="btn" data-act="loadSample">Replace with sample data</button>
               <button class="btn btn-danger-ghost" data-act="eraseAll">${UI.icon('trash')}Erase everything</button>
-            </div>
+            </div>` : '<p class="help">Restore, sample data and erase are admin-only.</p>'}
           </div></div>
           <div class="card"><div class="card-head"><h2>Privacy & shortcuts</h2></div><div class="card-body">
             <div class="banner warn">${UI.icon('shield')}<div><b>Do not store patient health information (PHI) here.</b> This tool is for business relationships (clinics, employers, partners, board). HIPAA-covered data needs a vendor that signs a BAA.</div></div>
@@ -96,6 +111,11 @@ Views.settings = (() => {
 
     root.onchange = async (e) => {
       const t = e.target;
+      if (t.dataset.memberRole) {
+        try { await Cloud.setMemberRole(t.dataset.memberRole, t.value); UI.toast(`${t.dataset.memberRole} is now ${t.value}`, 'success'); } catch (err) { UI.toast(err.message, 'error'); }
+        await loadMembers();
+        return;
+      }
       if (t.dataset.setting) { S.setSettings({ [t.dataset.setting]: t.value.trim() || 'First Way Health' }); UI.toast('Saved', 'success'); }
       else if (t.dataset.me !== undefined) { S.setMe(t.value); if (S.mode !== 'cloud') S.setSettings({ currentUserId: t.value }); else App.rerender(); UI.toast('Saved', 'success'); }
       else if (t.dataset.cadence) { S.setSettings({ cadence: { ...S.settings.cadence, [t.dataset.cadence]: Math.max(0, Number(t.value) || 0) } }, { silent: true }); UI.toast(`Cadence for ${t.dataset.cadence} saved`, 'success'); }
@@ -112,7 +132,7 @@ Views.settings = (() => {
         e.preventDefault();
         const email = form.email.value.trim();
         if (!/^\S+@\S+\.\S+$/.test(email)) { UI.toast('Enter a valid email', 'error'); return; }
-        try { await Cloud.addMember(email); form.reset(); UI.toast(`${email} can now sign in`, 'success'); await loadMembers(); } catch (err) { UI.toast(err.message, 'error'); }
+        try { await Cloud.addMember(email, form.role.value); form.reset(); UI.toast(`${email} can now create an account and sign in`, 'success'); await loadMembers(); } catch (err) { UI.toast(err.message, 'error'); }
       };
       if (members === null) loadMembers();
     }

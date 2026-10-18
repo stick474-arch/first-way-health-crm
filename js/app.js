@@ -42,7 +42,7 @@ const App = (() => {
     const box = {
       local: [stale ? 'alert' : 'database', 'Saved in this browser', `Last backup: ${last ? U.relDays(last.slice(0, 10)) : 'never'}`, stale ? 'stale' : ''],
       demo: ['database', 'Demo mode', 'Sample data, only in this browser', ''],
-      synced: ['check', 'Synced to the cloud', Cloud.user?.email || '', 'ok'],
+      synced: ['check', Cloud.canWrite ? 'Synced to the cloud' : 'View-only access', `${Cloud.user?.email || ''}${Cloud.role ? ` · ${Cloud.role}` : ''}`, 'ok'],
       saving: ['clock', 'Saving…', Cloud.user?.email || '', ''],
       error: ['alert', cloud ? 'Sync error, retrying' : 'Cloud unavailable', st.detail, 'stale'],
     }[st.state] || ['database', 'Saved in this browser', '', ''];
@@ -71,6 +71,7 @@ const App = (() => {
     view.oninput = null;
     view.onchange = null;
     v.render(view, route.params);
+    lockViewForViewers();
     renderNav();
     document.body.classList.remove('sidebar-open');
     const label = NAV.find((n) => n.id === route.name)?.label || '';
@@ -202,6 +203,18 @@ const App = (() => {
     UI.toast('Backup downloaded. Keep it in a shared drive.', 'success');
   }
 
+  // ---- Roles: viewers get a read-only UI (the database enforces it too) -------------------
+  const WRITE_ACTS = new Set(['logActivity', 'toggleTask', 'moveDeal', 'contactMore', 'setAtt', 'attAll', 'agAdd', 'agDelete', 'agMove',
+    'minutesDraft', 'mtgStatus', 'saveLists', 'loadSample', 'eraseAll', 'removeMember']);
+  const isWriteAction = (act) => /^(new|edit)/.test(act) || WRITE_ACTS.has(act);
+
+  function lockViewForViewers() {
+    if (Cloud.canWrite) return;
+    view.querySelectorAll('#minutesText, [data-ag], [data-stage-for], [data-setting], [data-cadence], [data-list], #restoreFile')
+      .forEach((el) => { el.disabled = true; });
+    view.querySelectorAll('.kcard').forEach((c) => { c.draggable = false; });
+  }
+
   // ---- Global click delegation -----------------------------------------------------------
   const globalActions = {
     openSidebar: () => document.body.classList.add('sidebar-open'),
@@ -226,6 +239,7 @@ const App = (() => {
     const fn = viewActions[act] || Actions[act] || globalActions[act];
     if (!fn) return;
     e.preventDefault();
+    if (!Cloud.canWrite && isWriteAction(act)) { UI.toast('You have view-only access. Ask an admin if you need to edit.', 'info'); return; }
     if (act !== 'toggleNewMenu') toggleNewMenu(false);
     fn({ ...el.dataset }, el, e);
   });
@@ -242,6 +256,7 @@ const App = (() => {
     const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) || e.target.isContentEditable;
     if (typing || e.ctrlKey || e.metaKey || e.altKey || UI.hasModal()) return;
     if (e.key === '/') { e.preventDefault(); searchInput.focus(); }
+    if (!Cloud.canWrite) return;
     if (e.key === 'c') Actions.newContact({});
     if (e.key === 'l') Actions.logActivity({});
     if (e.key === 't') Actions.newTask({});
@@ -251,8 +266,10 @@ const App = (() => {
   function onboarding() {
     let done = false;
     const cloud = S.mode === 'cloud';
-    const starts = [{ value: 'sample', label: 'Explore with sample data (you can erase it later in Settings)' }, { value: 'empty', label: 'Start with an empty workspace' }];
-    if (cloud && Cloud.localSnapshot) starts.unshift({ value: 'upload', label: 'Upload the data already saved in this browser' });
+    const starts = cloud
+      ? [{ value: 'empty', label: 'Start with an empty workspace (recommended)' }, { value: 'sample', label: 'Load sample data to try it out (erase it later in Settings)' }]
+      : [{ value: 'sample', label: 'Explore with sample data (you can erase it later in Settings)' }, { value: 'empty', label: 'Start with an empty workspace' }];
+    if (cloud && Cloud.localSnapshot) starts.push({ value: 'upload', label: 'Upload the data already saved in this browser' });
     UI.formModal({
       title: 'Welcome to your CRM & Board workspace',
       size: 'md',
@@ -260,11 +277,12 @@ const App = (() => {
       intro: cloud
         ? 'This shared workspace is empty. Everything you add is saved to your team’s Supabase database and appears for teammates in real time.'
         : 'Track clients and leads, categorize every contact, and run your board of directors in one place. Your data is stored <b>in this browser</b>; use <b>Back up now</b> regularly.',
-      values: { companyName: 'First Way Health', start: starts[0].value, yourName: Cloud.user?.email?.split('@')[0] || '' },
+      values: { companyName: 'First Way Health', start: starts[0].value, yourName: Cloud.user?.email?.split('@')[0] || '', starterTags: true },
       fields: [
         { name: 'yourName', label: 'Your name', required: true, span: 2 },
         { name: 'companyName', label: 'Company', required: true, span: 2 },
         { name: 'start', label: 'How do you want to start?', type: 'select', span: 2, options: starts },
+        { name: 'starterTags', type: 'checkbox', span: 2, showWhen: 'start:empty', checkLabel: 'Add starter tags (Role: Decision maker, Champion… · Segment · Expertise). You can edit them in Settings.' },
       ],
       onSubmit: (d) => {
         done = true;
@@ -282,6 +300,12 @@ const App = (() => {
         } else {
           const u = S.upsert('users', { name: d.yourName, role: 'Founder', email: Cloud.user?.email || '' }, { silent: true });
           S.setMe(u.id);
+          if (d.starterTags) {
+            [['Role', 'Decision maker', 'red'], ['Role', 'Champion', 'violet'], ['Role', 'Influencer', 'blue'],
+              ['Segment', 'Small practice', 'amber'], ['Segment', 'Health system', 'cyan'], ['Segment', 'Employer', 'orange'],
+              ['Expertise', 'Finance', 'slate'], ['Expertise', 'Clinical', 'pink'], ['Expertise', 'Legal', 'green']]
+              .forEach(([group, name, color]) => S.upsert('tags', { group, name, color }, { silent: true }));
+          }
           S.setSettings({ companyName: d.companyName, currentUserId: u.id });
           UI.toast('Workspace ready. Start by adding your first contact.', 'success');
         }
@@ -315,11 +339,13 @@ const App = (() => {
       }
       S.setMe(me.id);
     }
+    if (!Cloud.canWrite) document.body.classList.add('read-only');
     Cloud.onStatus(() => renderFoot());
     S.onChange(rerender);
     window.addEventListener('hashchange', () => { UI.closeMenu(); render(); });
     render();
-    if (S.firstRun) onboarding();
+    if (S.firstRun && Cloud.canWrite) onboarding();
+    else if (S.firstRun) UI.toast('This workspace is still empty. An admin needs to set it up.', 'info', { duration: 8000 });
   }
 
   boot();

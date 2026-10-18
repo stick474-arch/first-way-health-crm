@@ -8,6 +8,12 @@ const Cloud = (() => {
 
   let client = null;
   let user = null;
+  let role = null; // 'admin' | 'member' | 'viewer' (from crm_members via the crm_role() function)
+  const ROLES = [
+    { id: 'admin', label: 'Admin', hint: 'Everything, plus team access and roles' },
+    { id: 'member', label: 'Member', hint: 'Read and edit all data' },
+    { id: 'viewer', label: 'Viewer', hint: 'Read-only' },
+  ];
   let status = { state: 'local', detail: '' }; // local | demo | synced | saving | error
   const dirty = new Map(); // "coll:id" → { coll, id, deleted }
   const remoteIds = new Set();
@@ -43,6 +49,7 @@ const Cloud = (() => {
 
   async function flush() {
     if (!client || !user) return;
+    if (role === 'viewer') { dirty.clear(); return; } // read-only: the database would reject it anyway
     if (flushing) { scheduleFlush(300); return; }
     if (!dirty.size) return;
     flushing = true;
@@ -123,10 +130,13 @@ const Cloud = (() => {
   }
 
   // ---- Auth & allowlist ------------------------------------------------------------------
-  async function isMember() {
-    const { data, error } = await client.rpc('is_member');
-    if (error) throw error;
-    return data === true;
+  async function fetchRole() {
+    const { data, error } = await client.rpc('crm_role');
+    if (error) {
+      if (error.code === 'PGRST202' || error.code === 'PGRST205') throw new Error('The database is not set up yet: run supabase/schema.sql in the Supabase SQL Editor.');
+      throw error;
+    }
+    return data || null;
   }
 
   function authScreen(message = '') {
@@ -228,8 +238,9 @@ const Cloud = (() => {
           user = res;
           loadingScreen('Loading your workspace…');
         }
-        if (await isMember()) break;
-        note = `${user.email} is not on the team list yet. Ask a teammate to add it in Settings → Team access, then sign in again.`;
+        role = await fetchRole();
+        if (role) break;
+        note = `${user.email} does not have access yet (or the email is not confirmed). Ask an admin to add it in Settings → Team access, then sign in again.`;
         await client.auth.signOut();
         user = null;
       }
@@ -273,9 +284,14 @@ const Cloud = (() => {
     if (error) throw error;
     return data;
   }
-  async function addMember(email, role = 'member') {
-    const { error } = await client.from('crm_members').insert({ email: email.trim().toLowerCase(), role });
+  async function addMember(email, newRole = 'member') {
+    const { error } = await client.from('crm_members').insert({ email: email.trim().toLowerCase(), role: newRole });
+    if (error) throw new Error(error.code === '23505' ? `${email} already has access` : error.message);
+  }
+  async function setMemberRole(email, newRole) {
+    const { error } = await client.from('crm_members').update({ role: newRole }).eq('email', email);
     if (error) throw error;
+    if (email === (user?.email || '').toLowerCase()) role = newRole;
   }
   async function removeMember(email) {
     const { error } = await client.from('crm_members').delete().eq('email', email);
@@ -283,10 +299,14 @@ const Cloud = (() => {
   }
 
   return {
-    init, flush, signOut, exitDemo, listMembers, addMember, removeMember,
+    init, flush, signOut, exitDemo, listMembers, addMember, setMemberRole, removeMember, ROLES,
     onStatus: (fn) => statusListeners.push(fn),
     get status() { return status; },
     get user() { return user; },
+    get role() { return role; },
+    // Local and demo modes: you own the data, so you are effectively an admin.
+    get isAdmin() { return Store.mode !== 'cloud' || role === 'admin'; },
+    get canWrite() { return Store.mode !== 'cloud' || role === 'admin' || role === 'member'; },
     get configured() { return configured; },
     localSnapshot: null,
   };

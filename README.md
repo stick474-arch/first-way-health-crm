@@ -69,15 +69,26 @@ Why Supabase over Firebase for this app: the data is relational (contacts ↔ or
 
 1. Create a free project at [supabase.com](https://supabase.com).
 2. **SQL Editor → New query**: paste [`supabase/schema.sql`](supabase/schema.sql) and run it.
-3. Add yourself to the team allowlist (edit the email and run):
+3. Add the first admin(s) (edit the email and run):
    ```sql
-   insert into public.crm_members (email, role) values ('you@firstwayhealth.com', 'admin');
+   insert into public.crm_members (email, role) values ('you@firstwayhealth.com', 'admin')
+   on conflict (email) do update set role = 'admin';
    ```
 4. **Authentication → URL Configuration**: set *Site URL* to your app URL (e.g. `https://stick474-arch.github.io/first-way-health-crm/`) and add it to *Redirect URLs* (add `http://localhost:5173` too for local testing).
 5. **Project Settings → API Keys**: copy the *Project URL* and the *publishable* key (`sb_publishable_…`, or the legacy *anon* key) into [`js/config.js`](js/config.js). Never use a secret / `service_role` key in the browser.
 6. Commit and push. Open the app, choose **Create your account** (or **Email me a sign-in link**) with the allowlisted email, and pick *sample data*, *empty* or *upload what's in this browser*.
 
-Add teammates in **Settings → Team access**; they then create their account with that email. Anyone not on the list can sign up but cannot read or write anything.
+Admins add teammates in **Settings → Team access** and pick a role; the person then creates an account with that email and confirms it. Anyone not on the list can sign up but cannot read or write anything. Keep **Confirm email** enabled in Supabase Auth: access is granted only to confirmed emails.
+
+### Roles
+
+| Role | Can do |
+|---|---|
+| **Admin** | Everything, plus add/remove people, change roles, restore backups, load sample data, erase the workspace |
+| **Member** | Read and edit all CRM and board data |
+| **Viewer** | Read-only (e.g. a board observer or advisor) |
+
+Roles are enforced in the database (RLS policies use `crm_role()`, `crm_can_write()` and `crm_is_admin()`), and the UI hides what a role cannot do. The workspace can never be left without an admin. To add a role later (for example *Board-only*), extend the `crm_members_role_check` constraint and its policies in `supabase/schema.sql` — policies can also filter by `crm_records.collection`.
 
 Notes: Supabase's built-in email sender is rate-limited (fine for a few users; configure SMTP for more). Free projects pause after a week of inactivity and resume from the dashboard.
 
@@ -86,7 +97,7 @@ Notes: Supabase's built-in email sender is rate-limited (fine for a few users; c
 - One table, `crm_records (id, collection, data jsonb, updated_at, updated_by)`, holds every record; a `settings` row holds workspace settings. JSONB lets the product evolve without migrations; SQL views (`crm_contacts_v`, `crm_deals_v`, `crm_resolutions_v`) expose typed columns for reporting.
 - Every create/update/delete is queued and upserted in small batches (debounced), with automatic retry when offline.
 - Realtime (`postgres_changes`) applies teammates' edits live; a record you are editing locally is never overwritten by an incoming change, and the page never re-renders under your cursor while you type.
-- RLS: only authenticated users whose email is in `crm_members` can select/insert/update/delete. Anonymous access is revoked.
+- RLS: only authenticated users with a confirmed email listed in `crm_members` can read; admins and members can write; only admins manage access. Anonymous access is revoked.
 
 ## Privacy
 
