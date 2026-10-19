@@ -226,6 +226,11 @@ const App = (() => {
     toggleTheme,
     toggleNewMenu: () => toggleNewMenu(),
     exportBackup,
+    openRef: (ds) => ChatDock.openRef(ds.ref, location.hash.startsWith('#/chat') ? Views.chat.channel : null),
+    deleteMsg: async (ds) => {
+      if (!(await UI.confirm('Delete this message for everyone?', { okText: 'Delete' }))) return;
+      await Chat.remove(ds.id);
+    },
     resetDemo: async () => {
       if (!(await UI.confirm('Reset the demo to its original sample data? Your changes in this demo will be lost.', { okText: 'Reset demo', danger: false }))) return;
       loadDemoData();
@@ -370,6 +375,7 @@ const App = (() => {
     render();
     Chat.onChange(renderNav);
     Chat.start();
+    ChatDock.mount();
     if (S.firstRun && Cloud.canWrite) onboarding();
     else if (S.firstRun) UI.toast('This workspace is still empty. An admin needs to set it up.', 'info', { duration: 8000 });
   }
