@@ -433,28 +433,59 @@ const Store = (() => {
     return n;
   }
 
-  // Add records from a backup or recovery file; existing records (same id, or same email for people) are kept.
+  // Add records from a backup or recovery file. Nothing is deleted or overwritten:
+  // - a record whose id already exists, or a person (team member / contact) whose email already
+  //   exists, is kept as it is; the file only fills in fields that are still empty there;
+  // - every reference in the file to such a person is pointed at the existing record, so tasks,
+  //   attendance and interactions land on the right people.
   function mergeJSON(text) {
     const parsed = JSON.parse(text);
     const d = parsed && parsed.data ? parsed.data : parsed;
     if (!d || typeof d !== 'object') throw new Error('This file is not an Aetherium backup.');
     const lower = (s) => (s || '').toLowerCase();
-    const added = {};
-    const skipped = [];
+    const empty = (v) => v === undefined || v === null || v === '' || (Array.isArray(v) && !v.length);
+    const idMap = {};
+    const matched = [];
+    const remap = (r) => {
+      let s = JSON.stringify(r);
+      for (const [from, to] of Object.entries(idMap)) s = s.split(`"${from}"`).join(`"${to}"`);
+      return JSON.parse(s);
+    };
+    // 1. find existing counterparts (same id, or same email for people) and fill their blanks
     for (const c of COLLECTIONS) {
       for (const r of Array.isArray(d[c]) ? d[c] : []) {
-        if (!r || !r.id || get(c, r.id)) continue;
-        if ((c === 'users' || c === 'contacts') && r.email && db[c].some((x) => lower(x.email) === lower(r.email))) {
-          skipped.push(c === 'users' ? r.name : contactName(r));
-          continue;
+        if (!r || !r.id) continue;
+        let cur = get(c, r.id);
+        if (!cur && (c === 'users' || c === 'contacts') && r.email) cur = db[c].find((x) => lower(x.email) === lower(r.email)) || null;
+        if (!cur) continue;
+        if (cur.id !== r.id) idMap[r.id] = cur.id;
+        let changed = false;
+        for (const [k, v] of Object.entries(remap(r))) {
+          if (['id', 'createdAt', 'updatedAt'].includes(k) || empty(v)) continue;
+          if (k === 'board' && v && typeof v === 'object') {
+            cur.board = cur.board || {};
+            for (const [bk, bv] of Object.entries(v)) if (empty(cur.board[bk]) && !empty(bv)) { cur.board[bk] = bv; changed = true; }
+          } else if (empty(cur[k])) { cur[k] = v; changed = true; }
         }
+        if (changed) { cur.updatedAt = U.now(); touch(c, cur); }
+        matched.push({ c, id: r.id });
+        if (c === 'users' || c === 'contacts') matched[matched.length - 1].name = c === 'users' ? cur.name : contactName(cur);
+      }
+    }
+    // 2. add everything new, with references pointed at the existing people
+    const isMatched = (c, id) => matched.some((m) => m.c === c && m.id === id);
+    const added = {};
+    for (const c of COLLECTIONS) {
+      for (const raw of Array.isArray(d[c]) ? d[c] : []) {
+        if (!raw || !raw.id || isMatched(c, raw.id)) continue;
+        const r = remap(raw);
         db[c].push(r);
         touch(c, r);
         added[c] = (added[c] || 0) + 1;
       }
     }
     commit();
-    return { added, skipped };
+    return { added, skipped: [...new Set(matched.filter((m) => m.name).map((m) => m.name))] };
   }
 
   function replaceAll(d) {

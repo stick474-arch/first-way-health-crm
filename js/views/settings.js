@@ -142,7 +142,7 @@ Views.settings = (() => {
         try {
           const { added, skipped } = S.mergeJSON(text);
           const parts = Object.entries(added).map(([c, n]) => `${n} ${c}`);
-          UI.toast(parts.length ? `Added ${parts.join(', ')}${skipped.length ? ` · already here: ${skipped.join(', ')}` : ''}` : (skipped.length ? `Already here: ${skipped.join(', ')}` : 'Nothing new in that file'), parts.length ? 'success' : 'info', { duration: 8000 });
+          UI.toast(parts.length ? `Added ${parts.join(', ')}${skipped.length ? ` · linked to existing: ${skipped.join(', ')}` : ''}` : (skipped.length ? `Linked to existing: ${skipped.join(', ')}` : 'Nothing new in that file'), parts.length ? 'success' : 'info', { duration: 8000 });
         } catch (err) { UI.toast(err.message || 'That file could not be read', 'error'); }
       }
       else if (t.id === 'restoreFile' && t.files[0]) {
