@@ -81,6 +81,14 @@
     var data = { users: [], contacts: [], tasks: [], activities: [], meetings: [], resolutions: [], organizations: [], deals: [], tags: [] };
     var ids = {};
     sel.forEach(function (p) { if (!ids[p.rec.id]) { data[p.kind].push(p.rec); ids[p.rec.id] = true; } });
+    // bring along the tags the selected people use, so they don't arrive pointing at nothing
+    sel.forEach(function (p) {
+      (p.rec.tags || []).forEach(function (tid) {
+        if (ids[tid]) return;
+        var t = (stores[p.si].data.tags || []).filter(function (x) { return x.id === tid; })[0];
+        if (t) { data.tags.push(t); ids[tid] = true; }
+      });
+    });
     if (related) {
       stores.forEach(function (st) {
         (st.data.tasks || []).forEach(function (t) { if ((ids[t.ownerId] || ids[t.contactId]) && !ids[t.id]) { data.tasks.push(t); ids[t.id] = true; } });
