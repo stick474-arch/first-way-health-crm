@@ -313,7 +313,7 @@ Views.board = (() => {
             }).join('') : '<div class="empty-sm">Add board members first.</div>'}</div>
           </div>
           <div class="card">
-            <div class="card-head"><h3>Action items from this meeting</h3><div class="right"><button class="btn btn-sm btn-ghost" data-act="newTask" data-meeting="${m.id}" data-kind="Board action">${UI.icon('plus')}Add</button></div></div>
+            <div class="card-head"><h3>Action items from this meeting</h3><div class="right">${actions.length ? `<button class="btn btn-sm btn-ghost" data-act="openMeetingTasks" data-m="${m.id}" title="See and manage these in Tasks & follow-ups">${UI.icon('checkSquare')}Open in Tasks</button>` : ''}<button class="btn btn-sm btn-ghost" data-act="newTask" data-meeting="${m.id}" data-kind="Board action">${UI.icon('plus')}Add</button></div></div>
             <div class="card-body flush">${actions.length ? actions.map(Parts.taskRow).join('') : '<div class="empty-sm">Assign every follow-up an owner and a due date before the meeting ends.</div>'}</div>
           </div>
           ${carried.length ? `<div class="card"><div class="card-head"><h3>Open items carried over</h3><span class="sub">review these</span></div>
@@ -456,6 +456,7 @@ Views.board = (() => {
     render,
     actions: {
       setActView: (ds) => { state.actView = ds.v; App.rerender(); },
+      openMeetingTasks: (ds) => Views.tasks.showMeeting(ds.m),
       startInaugural: () => {
         const hour = String(new Date().getHours()).padStart(2, '0');
         const chair = S.boardMembers().find((c) => c.board?.role === 'Chair');

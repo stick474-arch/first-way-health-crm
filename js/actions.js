@@ -382,12 +382,25 @@ const Actions = (() => {
         UI.toast('Meeting scheduled', 'success');
         go(`#/board/meetings/${saved.id}`);
       },
-      onDelete: existing ? () => {
+      onDelete: existing ? async () => {
+        const drafts = S.all('resolutions').filter((r) => r.meetingId === existing.id && r.status === 'Proposed');
+        const openTasks = S.all('tasks').filter((t) => t.meetingId === existing.id && t.status !== 'done');
+        let alsoLinked = false;
+        if (drafts.length || openTasks.length) {
+          alsoLinked = await UI.confirm(
+            `This meeting also has ${[drafts.length ? U.plural(drafts.length, 'draft resolution') : '', openTasks.length ? U.plural(openTasks.length, 'open action item') : ''].filter(Boolean).join(' and ')}. Delete them too? Choose Cancel to keep them, unlinked.`,
+            { title: 'Delete what belongs to this meeting?', okText: 'Delete them too' },
+          );
+        }
+        if (alsoLinked) {
+          drafts.forEach((r) => S.remove('resolutions', r.id));
+          openTasks.forEach((t) => S.remove('tasks', t.id));
+        }
         S.remove('meetings', existing.id);
-        UI.toast('Meeting deleted');
+        UI.toast(alsoLinked ? `Meeting deleted with ${U.plural(drafts.length + openTasks.length, 'linked item')}` : 'Meeting deleted');
         go('#/board/meetings');
       } : null,
-      deleteConfirm: 'Delete this meeting, its agenda, attendance and minutes? Linked resolutions and action items are kept.',
+      deleteConfirm: 'Delete this meeting, its agenda, attendance and minutes? Approved resolutions and completed action items are always kept.',
     });
   }
 
