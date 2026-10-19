@@ -337,6 +337,7 @@ const Cloud = (() => {
     onStatus: (fn) => statusListeners.push(fn),
     get status() { return status; },
     get user() { return user; },
+    get client() { return client; },
     get role() { return role; },
     // Local and demo modes: you own the data, so you are effectively an admin.
     get isAdmin() { return Store.mode !== 'cloud' || role === 'admin'; },

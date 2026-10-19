@@ -275,6 +275,7 @@ Views.board = (() => {
           </div>
           <div class="row wrap">
             ${next ? `<button class="btn btn-primary" data-act="mtgStatus" data-id="${m.id}" data-s="${next[0]}">${UI.icon('check')}${next[1]}</button>` : ''}
+            <button class="btn" data-act="composeEmail" data-meeting="${m.id}">${UI.icon('mail')}<span class="hide-sm">Email board</span></button>
             <button class="btn" data-act="printMinutes" data-id="${m.id}">${UI.icon('printer')}<span class="hide-sm">Minutes</span></button>
             <button class="btn" data-act="editMeeting" data-id="${m.id}">${UI.icon('edit')}Edit</button>
           </div>

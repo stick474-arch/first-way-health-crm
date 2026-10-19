@@ -479,6 +479,104 @@ const Actions = (() => {
     });
   }
 
+  // ---- Email: write it here, send it from Gmail / Outlook / the mail app, log it automatically --
+  const MAIL_CLIENTS = [
+    { value: 'gmail', label: 'Gmail (opens a new tab)' },
+    { value: 'outlook', label: 'Outlook on the web (opens a new tab)' },
+    { value: 'mailto', label: 'Default mail app on this computer' },
+  ];
+  const mailPref = () => { try { return localStorage.getItem('fwh-mail-client') || 'gmail'; } catch { return 'gmail'; } };
+
+  function mailUrl(client, to, subject, body) {
+    const e = encodeURIComponent;
+    if (client === 'outlook') return `https://outlook.office.com/mail/deeplink/compose?to=${e(to)}&subject=${e(subject)}&body=${e(body)}`;
+    if (client === 'mailto') return `mailto:${to.split(/[,;\s]+/).filter(Boolean).map(e).join(',')}?subject=${e(subject)}&body=${e(body)}`;
+    return `https://mail.google.com/mail/?view=cm&fs=1&to=${e(to)}&su=${e(subject)}&body=${e(body)}`;
+  }
+
+  function emailTemplates(ctx) {
+    const sign = `\n\nBest,\n${ctx.me}\n${ctx.company}`;
+    const hi = ctx.first ? `Hi ${ctx.first},` : 'Hello,';
+    const t = {
+      blank: { label: 'Blank', subject: '', body: `${hi}\n\n${sign.trim() ? sign : ''}` },
+      followup: { label: 'Follow-up after a conversation', subject: `Following up · ${ctx.company}`, body: `${hi}\n\nThank you for your time today. As we discussed:\n\n- \n- \n\nNext step: [what happens next, and when].${sign}` },
+      meeting: { label: 'Meeting request', subject: `Meeting request · ${ctx.company}${ctx.org ? ` × ${ctx.org}` : ''}`, body: `${hi}\n\nWould you have 30 minutes next week to talk about [topic]? These times work for us:\n\n- [day, time]\n- [day, time]\n\nHappy to adapt to your calendar.${sign}` },
+      proposal: { label: 'Proposal sent', subject: `Proposal · ${ctx.org || ctx.company}`, body: `${hi}\n\nAs promised, here is our proposal: [link or attachment].\n\nIn short: [scope, price, timeline].\n\nI will call you on [day] to go through any questions.${sign}` },
+      thanks: { label: 'Thank you', subject: `Thank you · ${ctx.company}`, body: `${hi}\n\nThank you for [what they did]. It made a real difference for us.${sign}` },
+    };
+    if (ctx.meeting) {
+      const m = ctx.meeting;
+      const when = [U.fmtDateLong(m.date), U.fmtTime(m.date)].filter(Boolean).join(' at ');
+      const agenda = (m.agenda || []).map((a, i) => `${i + 1}. ${a.title}${a.kind ? ` (for ${a.kind.toLowerCase()})` : ''}${a.presenter ? ` · ${a.presenter}` : ''}`).join('\n');
+      const res = S.all('resolutions').filter((r) => r.meetingId === m.id);
+      t.agenda = { label: 'Agenda and invitation', subject: `Agenda · ${m.title} · ${U.fmtDate(m.date)}`, body: `Hello board,\n\nHere is the agenda for the ${m.title} on ${when}${m.location ? ` (${m.location})` : ''}.\n\n${agenda}\n\nPlease confirm your attendance. Pre-reads will follow.${sign}` };
+      t.minutes = { label: 'Minutes and resolutions', subject: `Minutes · ${m.title} · ${U.fmtDate(m.date)}`, body: `Hello board,\n\nBelow are the ${m.status === 'Minutes approved' ? 'approved' : 'draft'} minutes of the ${m.title} (${when}).\n\n${m.minutes || '[minutes]'}${res.length ? `\n\nResolutions:\n${res.map((r) => `- ${r.number} ${r.title}: ${r.status}${r.status !== 'Proposed' ? ` (${r.votesFor || 0}-${r.votesAgainst || 0}-${r.abstain || 0})` : ''}`).join('\n')}` : ''}${m.status === 'Minutes approved' ? '' : '\n\nPlease send corrections before the next meeting.'}${sign}` };
+    }
+    return t;
+  }
+
+  function composeEmail(ds = {}) {
+    const contact = S.get('contacts', ds.contact);
+    const meeting = S.get('meetings', ds.meeting);
+    const me = S.currentUser()?.name || '';
+    const ctx = {
+      me, company: S.settings.companyName || 'Aetherium', first: contact?.firstName?.split(' ')[0] || '',
+      org: contact ? S.orgName(contact.orgId) : '', meeting,
+    };
+    const templates = emailTemplates(ctx);
+    const startKey = meeting ? (meeting.status === 'Scheduled' ? 'agenda' : 'minutes') : (ds.template || 'followup');
+    const to = ds.to || (contact?.email || '') || (meeting ? S.boardMembers().map((c) => c.email).filter(Boolean).join(', ') : '');
+    const missing = meeting ? S.boardMembers().filter((c) => !c.email).map((c) => S.contactName(c)) : [];
+    UI.formModal({
+      title: meeting ? `Email the board · ${meeting.title}` : contact ? `Email ${S.contactName(contact)}` : 'Write an email',
+      size: 'lg',
+      submitText: 'Open and send',
+      intro: `Write it here; it opens ready to send in your mail. We log it in the history automatically.${missing.length ? ` <b>No email on file for:</b> ${U.esc(missing.join(', '))}.` : ''}`,
+      values: { to, template: startKey, subject: templates[startKey].subject, body: templates[startKey].body, client: mailPref(), followUp: meeting ? '' : '7', log: true },
+      fields: [
+        { name: 'to', label: 'To', required: true, span: 2, help: 'Separate several addresses with commas.' },
+        { name: 'template', label: 'Start from', type: 'select', options: Object.entries(templates).map(([value, t]) => ({ value, label: t.label })) },
+        { name: 'client', label: 'Send with', type: 'select', options: MAIL_CLIENTS },
+        { name: 'subject', label: 'Subject', required: true, span: 2 },
+        { name: 'body', label: 'Message', type: 'textarea', rows: 11, span: 2 },
+        { name: 'followUp', label: 'Follow up if no reply', type: 'select', options: [{ value: '', label: 'No reminder' }, { value: '3', label: 'In 3 days' }, { value: '7', label: 'In 1 week' }, { value: '14', label: 'In 2 weeks' }] },
+        { name: 'log', type: 'checkbox', checkLabel: 'Log it in the history', },
+      ],
+      onMount: (form) => {
+        form.elements.template.addEventListener('change', () => {
+          const t = templates[form.elements.template.value];
+          form.elements.subject.value = t.subject;
+          form.elements.body.value = t.body;
+        });
+      },
+      onSubmit: (d) => {
+        const url = mailUrl(d.client, d.to, d.subject, d.body);
+        if (url.length > 7500) { UI.toast('That message is too long to hand over to your mail. Shorten it or paste the rest there.', 'error'); return false; }
+        try { localStorage.setItem('fwh-mail-client', d.client); } catch { /* ignore */ }
+        if (d.client === 'mailto') window.location.href = url; else window.open(url, '_blank', 'noopener');
+        if (d.log && Cloud.canWrite) {
+          const emails = d.to.toLowerCase().split(/[,;\s]+/).filter(Boolean);
+          const people = S.all('contacts').filter((c) => c.email && emails.includes(c.email.toLowerCase()));
+          const act = S.upsert('activities', {
+            type: 'Email', date: U.now(), subject: d.subject, notes: d.body.slice(0, 4000),
+            contactIds: people.map((c) => c.id), orgId: people[0]?.orgId || '', dealId: '', meetingId: meeting?.id || '', ownerId: S.currentUser()?.id || '',
+          }, { silent: !!d.followUp });
+          if (d.followUp) {
+            S.upsert('tasks', {
+              title: `Follow up: ${d.subject}`, due: U.addDays(U.today(), Number(d.followUp)), ownerId: S.currentUser()?.id || '',
+              kind: meeting ? 'Board action' : 'Follow-up', priority: 'Normal', status: 'open', doneAt: '',
+              contactId: people[0]?.id || '', orgId: people[0]?.orgId || '', dealId: '', meetingId: meeting?.id || '', notes: `Email sent ${U.fmtDate(U.today())}`,
+            });
+          }
+          UI.toast(`Opened in ${MAIL_CLIENTS.find((c) => c.value === d.client).label.split(' (')[0]} · logged${d.followUp ? ' · reminder set' : ''}`, 'success');
+          return act;
+        }
+        UI.toast('Opened in your mail', 'success');
+        return true;
+      },
+    });
+  }
+
   // data-act handlers (dataset → action)
   return {
     newContact: (ds) => editContact({ ...ds, id: '' }),
@@ -504,5 +602,6 @@ const Actions = (() => {
     newTag: (ds) => editTag({ ...ds, id: '' }),
     editTag,
     go: (ds) => go(ds.href),
+    composeEmail,
   };
 })();

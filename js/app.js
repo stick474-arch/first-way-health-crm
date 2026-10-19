@@ -14,6 +14,7 @@ const App = (() => {
     { id: 'pipeline', label: 'Pipeline', icon: 'kanban' },
     { id: 'activities', label: 'Activity log', icon: 'activity' },
     { id: 'tasks', label: 'Tasks & follow-ups', icon: 'checkSquare' },
+    { id: 'chat', label: 'Team chat', icon: 'message' },
     { sep: 'Governance' },
     { id: 'board', label: 'Board of Directors', icon: 'landmark' },
     { sep: '' },
@@ -25,7 +26,8 @@ const App = (() => {
     const open = S.all('tasks').filter((t) => t.status !== 'done');
     const due = open.filter((t) => t.due && U.daysFromToday(t.due) <= 0).length;
     const boardOpen = open.filter((t) => t.kind === 'Board action').length;
-    const counts = { tasks: due ? `<span class="nav-count hot" title="Overdue or due today">${due}</span>` : '', board: boardOpen ? `<span class="nav-count" title="Open board action items">${boardOpen}</span>` : '' };
+    const chatUnread = Chat.unreadTotal();
+    const counts = { chat: chatUnread ? `<span class="nav-count hot" title="Unread messages">${chatUnread}</span>` : '', tasks: due ? `<span class="nav-count hot" title="Overdue or due today">${due}</span>` : '', board: boardOpen ? `<span class="nav-count" title="Open board action items">${boardOpen}</span>` : '' };
     $('#nav').innerHTML = NAV.map((n) => (n.sep !== undefined
       ? `<div class="nav-sep">${esc(n.sep)}</div>`
       : `<a href="#/${n.id}" class="nav-item ${current.name === n.id ? 'active' : ''}" ${current.name === n.id ? 'aria-current="page"' : ''}>${UI.icon(n.icon)}<span>${esc(n.label)}</span>${counts[n.id] || ''}</a>`)).join('');
@@ -207,7 +209,7 @@ const App = (() => {
 
   // ---- Roles: viewers get a read-only UI (the database enforces it too) -------------------
   const WRITE_ACTS = new Set(['logActivity', 'toggleTask', 'moveDeal', 'contactMore', 'setAtt', 'attAll', 'agAdd', 'agDelete', 'agMove',
-    'minutesDraft', 'mtgStatus', 'startInaugural', 'removeSample', 'saveLists', 'loadSample', 'eraseAll', 'removeMember']);
+    'minutesDraft', 'mtgStatus', 'startInaugural', 'removeSample', 'composeEmail', 'saveLists', 'loadSample', 'eraseAll', 'removeMember']);
   const isWriteAction = (act) => /^(new|edit)/.test(act) || WRITE_ACTS.has(act);
 
   function lockViewForViewers() {
@@ -366,6 +368,8 @@ const App = (() => {
     S.onChange(rerender);
     window.addEventListener('hashchange', () => { UI.closeMenu(); render(); });
     render();
+    Chat.onChange(renderNav);
+    Chat.start();
     if (S.firstRun && Cloud.canWrite) onboarding();
     else if (S.firstRun) UI.toast('This workspace is still empty. An admin needs to set it up.', 'info', { duration: 8000 });
   }

@@ -99,6 +99,11 @@ Roles are enforced in the database (RLS policies use `crm_role()`, `crm_can_writ
 
 Notes: Supabase's built-in email sender is rate-limited (fine for a few users; configure SMTP for more). Free projects pause after a week of inactivity and resume from the dashboard.
 
+### Team chat and email
+
+- **Team chat** (#general, #board and private direct messages, live, with who is online): run [`supabase/chat.sql`](supabase/chat.sql) once in the SQL Editor. Demo and local mode keep messages in the browser.
+- **Email**: "Send email" on a contact and "Email board" on a meeting open a ready-to-send message (templates for follow-ups, meeting requests, proposals, agendas and minutes) in Gmail, Outlook or the default mail app, log it in the history and can set a follow-up reminder. Sending directly from the app needs an email service (e.g. Resend) and a domain of your own.
+
 ### How sync works
 
 - One table, `crm_records (id, collection, data jsonb, updated_at, updated_by)`, holds every record; a `settings` row holds workspace settings. JSONB lets the product evolve without migrations; SQL views (`crm_contacts_v`, `crm_deals_v`, `crm_resolutions_v`) expose typed columns for reporting.

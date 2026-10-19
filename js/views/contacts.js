@@ -129,6 +129,7 @@ Views.contacts = (() => {
           </div>
         </div>
         <div class="quick">
+          ${c.email ? `<button class="btn btn-sm btn-primary" data-act="composeEmail" data-contact="${c.id}">${UI.icon('mail')}Send email</button>` : ''}
           <button class="btn btn-sm" data-act="logActivity" data-contact="${c.id}" data-atype="Call">${UI.icon('phone')}Log call</button>
           <button class="btn btn-sm" data-act="logActivity" data-contact="${c.id}" data-atype="Email">${UI.icon('mail')}Log email</button>
           <button class="btn btn-sm" data-act="logActivity" data-contact="${c.id}" data-atype="Meeting">${UI.icon('users')}Log meeting</button>
