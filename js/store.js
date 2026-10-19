@@ -380,6 +380,59 @@ const Store = (() => {
     replaceAll(d);
   }
 
+  // ---- Sample-data detection -------------------------------------------------------------
+  const SAMPLE_SIGNS = {
+    organizations: ['Brightwater Family Clinic', 'Northside Employers Alliance', 'Summit Physical Therapy', 'Harborview Senior Living',
+      'Mesa Freight & Logistics', 'CareBridge Home Health', 'Lumen Health Network', 'Pinecrest Capital'],
+    users: ['Jordan Ellis', 'Taylor Brooks', 'Alex Rivera'],
+    deals: ['Brightwater care coordination (annual)', 'Brightwater second location', 'Northside employee wellness program',
+      'Summit PT remote follow-up program', 'Harborview resident care pilot', 'Mesa Freight wellness screening', 'Riverside Dental onboarding package'],
+    meetings: ['Q3 Regular Board Meeting', 'Special Meeting: Line of Credit', 'Audit & Finance Committee', 'Q4 Regular Board Meeting'],
+    resolutions: ['Approve FY operating plan', 'Approve minutes of previous meeting', 'Approve $250k revolving line of credit with Lone Star Bank',
+      'Engage external auditor for FY review', 'Approve 2027 operating budget'],
+    tasks: ['Answer Tom on 2-year pricing', 'Send Summit PT the post-surgery case study', 'Follow up on second-location proposal', 'Book site visit at Harborview',
+      'Second touch: Mesa Freight', 'Send update deck to Victor', 'Send October investor update', 'Circulate Q4 board pack (pre-read) 5 days before meeting',
+      'Circulate draft 2027 budget to committee', 'Present hiring plan for second BD rep', 'Introduce two employer prospects from network',
+      'Start nominating process: Treasurer term ends soon', 'Update HIPAA & data-handling policy', 'Sign line of credit documents'],
+    activities: ['Discovery meeting at Brightwater', 'Contract signed', 'Onboarding check-in', 'Sent proposal for second location', 'Met Rachel at TX HR Summit',
+      'Program walkthrough with HR + Finance', 'Pricing negotiation', 'LinkedIn intro', 'Discovery call with Summit PT', 'Intro call with Harborview',
+      'Cold email: wellness screening', 'Partnership lunch with CareBridge', 'Quarterly catch-up with Victor', 'Monthly investor update (September)',
+      'Q3 Regular Board Meeting', 'Pre-meeting call with the Chair', 'Special Meeting: Line of Credit', '1:1 with Treasurer on 2027 budget', 'Clinical protocol review'],
+    tags: ['Care coordination', 'Wellness program', 'Remote monitoring', 'Mid-size employer'],
+  };
+  const SAMPLE_PEOPLE = ['maria.gonzalez', 'samuel.okafor', 'rachel.kim', 'tom.becker', 'olivia.chen', 'daniel.ruiz', 'aisha.patel', 'grace.thompson',
+    'victor.alvarez', 'hannah.weiss', 'dana.whitfield', 'marcus.lee', 'priya.raman', 'robert.nguyen', 'elena.morales'];
+
+  function findSample() {
+    const label = { organizations: (r) => r.name, users: (r) => r.name, deals: (r) => r.name, meetings: (r) => r.title, resolutions: (r) => r.title,
+      tasks: (r) => r.title, activities: (r) => r.subject, tags: (r) => r.name };
+    const found = {};
+    for (const c of COLLECTIONS) {
+      const hits = db[c].filter((r) => {
+        if (r.sample) return !(c === 'users' && (r.email || r.id === currentUser()?.id));
+        if (c === 'contacts') return /@example\.com$/i.test(r.email || '') && SAMPLE_PEOPLE.includes((r.email || '').split('@')[0].toLowerCase());
+        return SAMPLE_SIGNS[c] ? SAMPLE_SIGNS[c].includes(label[c](r)) : false;
+      });
+      if (hits.length) found[c] = hits.map((r) => r.id);
+    }
+    return found;
+  }
+
+  function removeSample() {
+    const found = findSample();
+    const keepTags = new Set();
+    // a tag survives if any real (non-sample) contact or organization uses it
+    ['contacts', 'organizations'].forEach((c) => db[c].forEach((r) => {
+      if (!(found[c] || []).includes(r.id)) (r.tags || []).forEach((t) => keepTags.add(t));
+    }));
+    if (found.tags) found.tags = found.tags.filter((id) => !keepTags.has(id));
+    let n = 0;
+    for (const [c, ids] of Object.entries(found)) {
+      for (const id of ids) { if (get(c, id)) { remove(c, id); n++; } }
+    }
+    return n;
+  }
+
   // Add records from a backup or recovery file; existing records (same id, or same email for people) are kept.
   function mergeJSON(text) {
     const parsed = JSON.parse(text);
@@ -462,7 +515,7 @@ const Store = (() => {
     lastContactMap, cadenceFor, health, openTasksFor, nextTaskFor, activitiesFor,
     isOpenDeal, dealProb, saveDeal, setDealStage,
     isBoardType, termEnded, isVoting, boardMembers, quorum, attendanceRate, nextResolutionNumber, upcomingMeetings, pastMeetings,
-    tag, tagsSorted, meta, setMeta, exportJSON, importJSON, mergeJSON, replaceAll, reset, recordCount,
+    tag, tagsSorted, meta, setMeta, exportJSON, importJSON, mergeJSON, findSample, removeSample, replaceAll, reset, recordCount,
     records, loadRemote, applyRemote, setHooks, setMode, get mode() { return mode; },
   };
 })();

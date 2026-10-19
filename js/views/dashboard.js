@@ -48,11 +48,13 @@ Views.dashboard = (() => {
     const sourceRows = Object.entries(sources).sort((a, b) => b[1] - a[1]).slice(0, 6).map(([label, value]) => ({ label, value }));
 
     const isEmpty = !contacts.length && !deals.length && !S.all('meetings').length;
+    const sampleLeft = !Cloud.demo && Cloud.isAdmin ? Object.values(S.findSample()).reduce((n, ids) => n + ids.length, 0) : 0;
 
     root.innerHTML = `
       ${Parts.pageHead(`${greet}${me ? `, ${me.name.split(' ')[0]}` : ''}`, esc(U.fmtDateLong(U.today())),
         `<button class="btn" data-act="newTask">${UI.icon('checkSquare')}<span class="hide-sm">New task</span></button>
          <button class="btn btn-primary" data-act="logActivity">${UI.icon('plus')}Log interaction</button>`)}
+      ${sampleLeft ? `<div class="banner warn">${UI.icon('alert')}<div><b>${sampleLeft} records here belong to the fictional sample company.</b> Remove them in one click so the workspace only holds your real data. <a href="#/settings">Open Settings → Data</a>.</div></div>` : ''}
       ${isEmpty ? `<div class="card" style="margin-bottom:16px">${UI.empty('home', 'Let’s set up your workspace',
         '1. Add your team in Settings · 2. Add your first leads and clients · 3. Add your board members · 4. Log every call, email and meeting with a next step.',
         '<button class="btn btn-primary" data-act="newContact">Add a contact</button> <button class="btn" data-act="newContact" data-type="Board Member">Add a board member</button>')}</div>` : ''}

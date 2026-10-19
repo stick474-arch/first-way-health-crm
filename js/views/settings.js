@@ -48,6 +48,20 @@ Views.settings = (() => {
     </div></div>`;
   }
 
+  function sampleSummary() {
+    const found = S.findSample();
+    const total = Object.values(found).reduce((n, ids) => n + ids.length, 0);
+    const parts = Object.entries(found).map(([c, ids]) => `${ids.length} ${c}`);
+    return { total, parts };
+  }
+  function sampleBanner() {
+    if (Cloud.demo || !Cloud.isAdmin) return '';
+    const { total, parts } = sampleSummary();
+    if (!total) return '';
+    return `<div class="banner warn" style="margin-top:10px">${UI.icon('alert')}<div><b>This workspace still has ${total} records from the fictional sample company</b> (${esc(parts.join(', '))}): Brightwater, Northside, Jordan Ellis and friends. Your own people and records are not touched.
+      <div style="margin-top:8px"><button class="btn btn-sm btn-danger" data-act="removeSample">${UI.icon('trash')}Remove sample data</button></div></div></div>`;
+  }
+
   function render(root) {
     const st = S.settings;
     const me = S.currentUser();
@@ -97,6 +111,7 @@ Views.settings = (() => {
               ${Cloud.isAdmin ? `<label class="btn" title="Replaces everything with the file">${UI.icon('upload')}Restore from backup (replace all)<input type="file" id="restoreFile" hidden></label>` : ''}
             </div>
             <p class="help" style="margin-top:8px">CSV exports for spreadsheets are on the Contacts, Organizations, Activity log and Resolutions pages.</p>
+            ${sampleBanner()}
             ${S.mode === 'cloud' && Cloud.browserData() ? `<div class="banner info" style="margin-top:10px">${UI.icon('database')}<div><b>This browser still has ${Cloud.browserData().count} records from before the cloud</b>${Cloud.browserData().people.length ? ` (team: ${esc(Cloud.browserData().people.join(', '))})` : ''}. Download them, then use <b>Add from file</b> to bring them into the team workspace, or open <a href="recover.html">the recovery page</a> to pick specific people.<div style="margin-top:8px"><button class="btn btn-sm" data-act="downloadBrowserData">${UI.icon('download')}Download browser data</button></div></div></div>` : ''}
             ${Cloud.isAdmin ? `<hr>
             <div class="data-actions">
@@ -181,6 +196,13 @@ Views.settings = (() => {
         if (me) { d.users.push(me); d.settings.currentUserId = me.id; }
         S.replaceAll(d);
         UI.toast('Workspace erased');
+      },
+      removeSample: async () => {
+        const { total, parts } = sampleSummary();
+        if (!total) { UI.toast('No sample data left', 'info'); return; }
+        if (!(await UI.confirm(`Remove ${total} sample records (${parts.join(', ')})? Your own people and records stay.`, { okText: 'Remove sample data' }))) return;
+        const n = S.removeSample();
+        UI.toast(`Removed ${n} sample records. The workspace is ready for your own data.`, 'success', { duration: 7000 });
       },
       signOut: () => Cloud.signOut(),
       downloadBrowserData: () => Cloud.downloadBrowserData(),

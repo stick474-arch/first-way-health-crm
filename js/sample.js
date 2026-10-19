@@ -7,7 +7,7 @@ const Sample = (() => {
     const at = (n, hh = 10, mm = 0) => `${day(n)}T${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`;
     const stamp = (n) => at(n, 9, 0);
     const mk = (coll, obj, created = -60) => {
-      const rec = { id: U.uid(Store.PREFIX[coll]), createdAt: stamp(created), updatedAt: stamp(created), ...obj };
+      const rec = { id: U.uid(Store.PREFIX[coll]), createdAt: stamp(created), updatedAt: stamp(created), sample: true, ...obj };
       d[coll].push(rec);
       return rec;
     };
