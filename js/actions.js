@@ -172,7 +172,14 @@ const Actions = (() => {
   // ---- Organizations ---------------------------------------------------------------------
   function editOrg(ds = {}) {
     const existing = S.get('organizations', ds.id);
-    const values = existing || { type: ds.type || 'Lead', ownerId: S.currentUser()?.id || '', tags: [] };
+    const main = S.mainOrg();
+    const values = existing
+      ? { ...existing, owners: S.orgOwners(existing) }
+      : { type: ds.type || 'Lead', owners: [S.currentUser()?.id].filter(Boolean), tags: [] };
+    const typeOptions = S.ORG_TYPES.map((t) => ({
+      value: t,
+      label: t === 'Main' ? (main && main.id !== existing?.id ? `Main (already: ${main.name})` : 'Main · our own company (only one)') : t,
+    }));
     UI.formModal({
       title: existing ? `Edit ${existing.name}` : 'New organization',
       size: 'lg',
@@ -180,20 +187,27 @@ const Actions = (() => {
       values,
       fields: [
         { name: 'name', label: 'Name', required: true, span: 2 },
-        { name: 'type', label: 'Relationship', type: 'select', options: S.ORG_TYPES },
+        { name: 'type', label: 'Relationship', type: 'select', options: typeOptions, help: 'Main is your own company. Clients, partners (alliances), vendors (contracts) and investors relate to it.' },
         { name: 'industry', label: 'Industry / segment', type: 'select', options: S.settings.industries, empty: '— Select —' },
         { name: 'size', label: 'Size (employees)', type: 'select', options: S.ORG_SIZES, empty: '— Unknown —' },
-        { name: 'ownerId', label: 'Account owner', type: 'select', options: UI.opts.users(), empty: '— Unassigned —' },
         { name: 'website', label: 'Website' },
+        { name: 'owners', label: 'Owners', type: 'chips', options: UI.opts.users(), span: 2, emptyText: 'Add team members in Settings first.', help: 'One or more people responsible for this relationship.' },
+        { name: 'logoUrl', label: 'Logo image URL (optional)', span: 2, placeholder: 'https://…/logo.png', help: 'Your Main company uses the Aetherium mark unless you set one.' },
         { name: 'phone', label: 'Main phone', type: 'tel' },
-        { name: 'address', label: 'City / address', span: 2 },
+        { name: 'address', label: 'City / address' },
         { name: 'tags', label: 'Tags', type: 'chips', options: UI.opts.tags(), span: 2, emptyText: 'No tags yet. Create them in Settings → Tags.' },
         { name: 'notes', label: 'Notes', type: 'textarea', span: 2 },
       ],
       onSubmit: (d) => {
         const dup = S.all('organizations').find((o) => o.id !== existing?.id && o.name.trim().toLowerCase() === d.name.toLowerCase());
         if (dup) { UI.toast(`"${dup.name}" already exists`, 'error'); return false; }
-        const saved = S.upsert('organizations', { ...(existing || {}), ...d });
+        if (d.type === 'Main' && main && main.id !== existing?.id) {
+          UI.toast(`${main.name} is already your Main company. Change it first to make this one Main.`, 'error');
+          return false;
+        }
+        if (d.logoUrl && !/^https:\/\//i.test(d.logoUrl)) { UI.toast('The logo URL must start with https://', 'error'); return false; }
+        const { owners, ...rest } = d;
+        const saved = S.upsert('organizations', { ...(existing || {}), ...rest, ownerIds: owners, ownerId: owners[0] || '' });
         UI.toast(existing ? 'Organization updated' : `${saved.name} added`, 'success');
         if (!existing && ds.navigate !== 'no') go(`#/organizations/${saved.id}`);
       },

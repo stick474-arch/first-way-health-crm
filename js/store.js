@@ -28,7 +28,9 @@ const Store = (() => {
     { id: 'Advisor', group: 'Governance', color: 'cyan', hint: 'Advisory board / non-voting' },
     { id: 'Team', group: 'Internal', color: 'slate', hint: 'Employee or contractor' },
   ];
-  const ORG_TYPES = ['Lead', 'Prospect', 'Client', 'Past Client', 'Partner', 'Vendor', 'Investor', 'Other'];
+  // 'Main' = our own company (exactly one). The rest describe how an organization relates to it.
+  const ORG_TYPES = ['Main', 'Lead', 'Prospect', 'Client', 'Past Client', 'Partner', 'Vendor', 'Investor', 'Other'];
+  const ORG_COLORS = { Main: 'amber', Client: 'green', Prospect: 'blue', Lead: 'sky', 'Past Client': 'slate', Partner: 'violet', Vendor: 'orange', Investor: 'pink', Other: 'slate' };
   const ORG_SIZES = ['1–10', '11–50', '51–200', '201–1,000', '1,000+'];
   const PRIORITIES = [
     { id: 'A', label: 'A · Key', color: 'red' },
@@ -226,6 +228,8 @@ const Store = (() => {
   const groupOf = (type) => typeInfo(type).group;
   const contactName = (c) => (c ? `${c.firstName || ''} ${c.lastName || ''}`.trim() || c.email || 'Unnamed contact' : '');
   const orgName = (id) => get('organizations', id)?.name || '';
+  const mainOrg = () => db.organizations.find((o) => o.type === 'Main') || null;
+  const orgOwners = (o) => (o ? (Array.isArray(o.ownerIds) && o.ownerIds.length ? o.ownerIds : (o.ownerId ? [o.ownerId] : [])) : []);
   // "Who am I" is remembered per browser (teammates share settings in cloud mode).
   const myId = () => { try { return localStorage.getItem(ME_KEY) || ''; } catch { return ''; } };
   const setMe = (id) => { try { localStorage.setItem(ME_KEY, id); } catch { /* ignore */ } };
@@ -534,7 +538,7 @@ const Store = (() => {
   const setMode = (m) => { mode = m; };
 
   return {
-    GROUPS, CONTACT_TYPES, ORG_TYPES, ORG_SIZES, PRIORITIES, STAGES, LOST_REASONS, ACTIVITY_TYPES, TASK_KINDS,
+    GROUPS, CONTACT_TYPES, ORG_TYPES, ORG_COLORS, ORG_SIZES, PRIORITIES, STAGES, LOST_REASONS, ACTIVITY_TYPES, TASK_KINDS,
     TASK_PRIORITIES, BOARD_ROLES, MEETING_TYPES, MEETING_STATUS, AGENDA_KINDS, RESOLUTION_STATUS, RESOLUTION_METHODS,
     STANDARD_AGENDA, INAUGURAL_AGENDA, INAUGURAL_RESOLUTIONS, TAG_COLORS, COLLECTIONS, PREFIX,
     get settings() { return db.settings; },
@@ -542,7 +546,7 @@ const Store = (() => {
     set firstRun(v) { firstRun = v; },
     onChange: (fn) => listeners.push(fn),
     all, get, upsert, update, remove, setSettings, defaults,
-    typeInfo, stageInfo, priorityInfo, groupOf, contactName, orgName, currentUser, setMe, nameOf,
+    typeInfo, stageInfo, priorityInfo, groupOf, contactName, orgName, mainOrg, orgOwners, currentUser, setMe, nameOf,
     lastContactMap, cadenceFor, health, openTasksFor, nextTaskFor, activitiesFor,
     isOpenDeal, dealProb, saveDeal, setDealStage,
     isBoardType, termEnded, isVoting, boardMembers, quorum, attendanceRate, nextResolutionNumber, upcomingMeetings, pastMeetings,

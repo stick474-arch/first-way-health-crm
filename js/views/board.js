@@ -2,7 +2,7 @@
 Views.board = (() => {
   const S = Store;
   const esc = U.esc;
-  const state = { resStatus: '', resYear: '', actView: 'open', showFormer: false };
+  const state = { resMeeting: '', resStatus: '', resYear: '', actView: 'open', showFormer: false };
   const TABS = [['overview', 'Overview'], ['members', 'Members'], ['meetings', 'Meetings'], ['resolutions', 'Resolutions'], ['actions', 'Action items']];
   const STATUS_COLORS = { Scheduled: 'blue', Held: 'amber', 'Minutes approved': 'green', Cancelled: 'slate', Proposed: 'blue', Approved: 'green', Rejected: 'red', Tabled: 'amber', Withdrawn: 'slate' };
 
@@ -49,12 +49,13 @@ Views.board = (() => {
       <td class="nowrap"><b>${esc(r.number)}</b></td>
       <td><b>${esc(r.title)}</b>${r.description ? `<div class="small muted">${esc(r.description)}</div>` : ''}</td>
       <td class="nowrap">${esc(U.fmtDate(r.date))}</td>
-      <td class="hide-sm">${esc(r.method)}${r.meetingId ? `<div class="small">${Parts.meetingLink(r.meetingId)}</div>` : ''}</td>
+      <td>${r.meetingId && S.get('meetings', r.meetingId) ? `${Parts.meetingLink(r.meetingId)}<div class="small muted">${esc(U.fmtDate(S.get('meetings', r.meetingId).date))}</div>` : `<span class="muted">${esc(r.method === 'Written consent' ? 'Written consent' : 'No meeting')}</span>`}</td>
+      <td class="hide-sm">${esc(r.method)}</td>
       <td class="votes" title="For / Against / Abstain">${r.status === 'Proposed' ? '—' : `${r.votesFor || 0} – ${r.votesAgainst || 0} – ${r.abstain || 0}`}</td>
       <td>${UI.badge(r.status, STATUS_COLORS[r.status])}</td>
     </tr>`;
   }
-  const resTable = (rows) => `<div class="table-wrap"><table class="table"><thead><tr><th>No.</th><th>Resolution</th><th>Date</th><th class="hide-sm">Method</th><th>Votes</th><th>Status</th></tr></thead><tbody>${rows.map(resolutionRow).join('')}</tbody></table></div>`;
+  const resTable = (rows) => `<div class="table-wrap"><table class="table"><thead><tr><th>No.</th><th>Resolution</th><th>Date</th><th>Meeting</th><th class="hide-sm">Method</th><th>Votes</th><th>Status</th></tr></thead><tbody>${rows.map(resolutionRow).join('')}</tbody></table></div>`;
 
   // ---- Overview --------------------------------------------------------------------------
   function overview(root) {
@@ -341,11 +342,15 @@ Views.board = (() => {
   function resolutions(root) {
     const all = S.all('resolutions');
     const years = [...new Set(all.map((r) => (r.date || '').slice(0, 4)).filter(Boolean))].sort().reverse();
-    const list = U.sortBy(all.filter((r) => (!state.resStatus || r.status === state.resStatus) && (!state.resYear || (r.date || '').startsWith(state.resYear))), (r) => `${r.date}${r.number}`, -1);
+    const meetingOpts = U.sortBy(S.all('meetings').filter((m) => all.some((r) => r.meetingId === m.id)), 'date', -1).map((m) => ({ value: m.id, label: `${m.title} · ${U.fmtDate(m.date)}` }));
+    if (state.resMeeting && !S.get('meetings', state.resMeeting)) state.resMeeting = '';
+    const list = U.sortBy(all.filter((r) => (!state.resStatus || r.status === state.resStatus) && (!state.resYear || (r.date || '').startsWith(state.resYear))
+      && (!state.resMeeting || (state.resMeeting === 'none' ? !r.meetingId || !S.get('meetings', r.meetingId) : r.meetingId === state.resMeeting))), (r) => `${r.date}${r.number}`, -1);
     root.innerHTML = `
       ${head('The official register of board decisions — votes in meetings and written consents')}
       ${tabs('resolutions')}
       <div class="filters">
+        <select class="select" data-filter="resMeeting" aria-label="Meeting">${UI.selectOptions([...meetingOpts, { value: 'none', label: 'Not linked to a meeting' }], state.resMeeting, 'All meetings')}</select>
         <select class="select" data-filter="resStatus" aria-label="Status">${UI.selectOptions(S.RESOLUTION_STATUS, state.resStatus, 'All statuses')}</select>
         <select class="select" data-filter="resYear" aria-label="Year">${UI.selectOptions(years, state.resYear, 'All years')}</select>
         <button class="btn btn-sm" data-act="exportResolutions">${UI.icon('download')}Export CSV</button>

@@ -72,6 +72,23 @@ const UI = (() => {
     )).join('');
   }
 
+  // The Aetherium mark: amber-gold A in front, orbit around it, dark star behind
+  let markSeq = 0;
+  function brandMark(cls = '') {
+    const id = `bm${++markSeq}`;
+    return `<svg class="brand-logo ${cls}" viewBox="0 0 240 240" aria-hidden="true"><defs><linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#9a5a18"/><stop offset="0.35" stop-color="#ff9900"/><stop offset="0.55" stop-color="#ffc266"/><stop offset="1" stop-color="#7a4512"/></linearGradient><clipPath id="${id}C"><rect width="240" height="240" rx="54"/></clipPath></defs><rect width="240" height="240" rx="54" fill="#0e1b3d"/><g clip-path="url(#${id}C)"><path d="M120 120 L120 14 L106 106 Z M120 120 L226 120 L134 106 Z M120 120 L120 226 L106 134 Z M120 120 L14 120 L106 134 Z" fill="#22345a"/><path d="M120 120 L120 14 L134 106 Z M120 120 L226 120 L134 134 Z M120 120 L120 226 L134 134 Z M120 120 L14 120 L106 106 Z" fill="#16264d"/><path d="M24.9 173.7 A98 26 -14 0 1 215.1 126.3" fill="none" stroke="#4fb8c6" stroke-width="6" opacity="0.4"/><path d="M120 40 L188 206 L162 206 L120 98 L78 206 L52 206 Z" fill="url(#${id})"/><circle cx="120" cy="40" r="14" fill="#0e1b3d"/><path d="M120 12 Q122.4 37.6 140 40 Q122.4 42.4 120 68 Q117.6 42.4 100 40 Q117.6 37.6 120 12 Z" fill="#ffffff"/><path d="M215.1 126.3 A98 26 -14 0 1 24.9 173.7" fill="none" stroke="#6ccad6" stroke-width="10" stroke-linecap="round"/><circle cx="40.8" cy="183.1" r="9" fill="#ff9900"/></g></svg>`;
+  }
+
+  // An organization's logo: its own image, the Aetherium mark for the Main company, else initials
+  function orgLogo(o, size = '') {
+    if (!o) return avatar('?', size);
+    if (o.logoUrl && /^https:\/\//i.test(o.logoUrl)) return `<img class="avatar org-logo ${size}" src="${esc(o.logoUrl)}" alt="" loading="lazy" referrerpolicy="no-referrer">`;
+    if (o.type === 'Main') return brandMark(`avatar ${size}`);
+    return avatar(o.name, size);
+  }
+
+  const ownersHtml = (ids) => ids.map((id) => `<span title="${esc(Store.nameOf(id))}">${avatar(Store.nameOf(id) || '?', 'sm')}</span>`).join('');
+
   function avatar(name, size = '') {
     let h = 0;
     for (const ch of String(name)) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
@@ -370,7 +387,7 @@ const UI = (() => {
   };
 
   return {
-    icon, actIcon, badge, typeBadge, priorityBadge, stageBadge, tagChips, avatar, healthDot, empty, dueLabel,
+    icon, actIcon, badge, typeBadge, priorityBadge, stageBadge, tagChips, avatar, brandMark, orgLogo, ownersHtml, healthDot, empty, dueLabel,
     toast, modal, confirm, prompt, formModal, field, readForm, initPickers, menu, closeMenu, closeTopModal, hasModal, opts, ICONS, selectOptions,
   };
 })();

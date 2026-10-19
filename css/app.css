@@ -221,6 +221,15 @@ kbd { font: 11px var(--mono); padding: 1px 5px; border: 1px solid var(--border-s
 }
 .avatar.sm { width: 24px; height: 24px; font-size: 10px; }
 .avatar.lg { width: 56px; height: 56px; font-size: 20px; }
+.avatar.xl { width: 72px; height: 72px; font-size: 24px; }
+svg.brand-logo.avatar { background: none; border-radius: 22%; }
+img.org-logo { object-fit: contain; background: var(--surface); border: 1px solid var(--border); border-radius: 22%; padding: 3px; }
+.owners { display: inline-flex; gap: 4px; align-items: center; flex-wrap: wrap; }
+.card.main-hero { background: linear-gradient(135deg, var(--void) 0%, var(--abyss) 100%); color: var(--on-void); border-color: var(--void); }
+.card.main-hero .meta { color: #9daaba; }
+.card.main-hero h1 { color: #f4f7fa; }
+.rel-group { padding: 4px 0 8px; }
+.rel-group h4 { margin: 0; padding: 10px 16px 4px; font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); display: flex; gap: 8px; align-items: center; }
 .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; flex: none; }
 .dot-ok { background: var(--success); }
 .dot-soon { background: var(--warning); }
