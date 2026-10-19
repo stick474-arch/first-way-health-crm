@@ -380,6 +380,30 @@ const Store = (() => {
     replaceAll(d);
   }
 
+  // Add records from a backup or recovery file; existing records (same id, or same email for people) are kept.
+  function mergeJSON(text) {
+    const parsed = JSON.parse(text);
+    const d = parsed && parsed.data ? parsed.data : parsed;
+    if (!d || typeof d !== 'object') throw new Error('This file is not an Aetherium backup.');
+    const lower = (s) => (s || '').toLowerCase();
+    const added = {};
+    const skipped = [];
+    for (const c of COLLECTIONS) {
+      for (const r of Array.isArray(d[c]) ? d[c] : []) {
+        if (!r || !r.id || get(c, r.id)) continue;
+        if ((c === 'users' || c === 'contacts') && r.email && db[c].some((x) => lower(x.email) === lower(r.email))) {
+          skipped.push(c === 'users' ? r.name : contactName(r));
+          continue;
+        }
+        db[c].push(r);
+        touch(c, r);
+        added[c] = (added[c] || 0) + 1;
+      }
+    }
+    commit();
+    return { added, skipped };
+  }
+
   function replaceAll(d) {
     db = migrate(d);
     if (hooks.bulk) hooks.bulk();
@@ -438,7 +462,7 @@ const Store = (() => {
     lastContactMap, cadenceFor, health, openTasksFor, nextTaskFor, activitiesFor,
     isOpenDeal, dealProb, saveDeal, setDealStage,
     isBoardType, termEnded, isVoting, boardMembers, quorum, attendanceRate, nextResolutionNumber, upcomingMeetings, pastMeetings,
-    tag, tagsSorted, meta, setMeta, exportJSON, importJSON, replaceAll, reset, recordCount,
+    tag, tagsSorted, meta, setMeta, exportJSON, importJSON, mergeJSON, replaceAll, reset, recordCount,
     records, loadRemote, applyRemote, setHooks, setMode, get mode() { return mode; },
   };
 })();

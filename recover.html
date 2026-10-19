@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Recover data · Aetherium</title>
+<link rel="stylesheet" href="css/app.css">
+<style>
+  body { background: var(--bg); }
+  .wrap { max-width: 860px; margin: 0 auto; padding: 32px max(16px, env(safe-area-inset-left, 0px)) 64px; }
+  .src { margin-top: 16px; }
+  .person { display: flex; align-items: center; gap: 12px; padding: 10px 16px; border-top: 1px solid var(--border); cursor: pointer; }
+  .person:first-child { border-top: 0; }
+  .person input { width: 18px; height: 18px; accent-color: var(--primary); }
+  .person .li-main small { white-space: normal; }
+  .hit { background: color-mix(in srgb, var(--lumen) 12%, transparent); }
+  code { font-family: var(--mono); font-size: 12px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1 style="font-size:24px;">Recover people saved in this browser</h1>
+  <p class="muted" style="margin-top:6px;">Earlier versions of the app could save to this browser instead of the team database. This page looks in both places this browser keeps data (production and the demo), finds the people, and builds a file you can add to the team workspace in <b>Settings → Data → Add from file</b>. Nothing is sent anywhere.</p>
+  <div class="row wrap" style="margin:16px 0;">
+    <label class="check"><input type="checkbox" id="related" checked> <span>Also include their tasks, interactions and meeting attendance</span></label>
+  </div>
+  <div id="out"></div>
+  <div class="row wrap" style="margin-top:18px; gap:10px;">
+    <button class="btn btn-primary" id="dl">Download JSON of the selected people</button>
+    <span class="muted small" id="sum"></span>
+  </div>
+  <p class="muted small" style="margin-top:24px;">Open this page in the same browser (and same profile) where you created the people. Names searched first: Diego, Carlos, John.</p>
+</div>
+<script>
+(function () {
+  var WANTED = /\b(diego|carlos|john)\b/i;
+  var SOURCES = [
+    { key: 'fwh-crm-data-v1', label: 'Production page (saved in this browser)' },
+    { key: 'fwh-demo-data-v1', label: 'Demo page' },
+  ];
+  var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
+  var stores = [];
+  SOURCES.forEach(function (s) {
+    try { var d = JSON.parse(localStorage.getItem(s.key) || 'null'); if (d) stores.push({ key: s.key, label: s.label, data: d }); } catch (e) { /* unreadable */ }
+  });
+  var out = document.getElementById('out');
+  if (!stores.length) {
+    out.innerHTML = '<div class="card"><div class="empty"><h3>No saved data in this browser</h3><p>Try the browser or device where you created Diego, Carlos and John. If they were created after the database started working, they are already in the team workspace.</p></div></div>';
+    document.getElementById('dl').disabled = true;
+    return;
+  }
+  var people = [];
+  stores.forEach(function (st, si) {
+    (st.data.users || []).forEach(function (u) { people.push({ si: si, kind: 'users', rec: u, name: u.name || '', sub: ['Team member', u.role, u.email].filter(Boolean).join(' · ') }); });
+    (st.data.contacts || []).forEach(function (c) {
+      var name = ((c.firstName || '') + ' ' + (c.lastName || '')).trim() || c.email || '';
+      var role = c.board && (c.type === 'Board Member' || c.type === 'Advisor') ? (c.board.role || c.type) : c.type;
+      people.push({ si: si, kind: 'contacts', rec: c, name: name, sub: [role, c.title, c.email].filter(Boolean).join(' · ') });
+    });
+  });
+  out.innerHTML = stores.map(function (st, si) {
+    var list = people.filter(function (p) { return p.si === si; });
+    list.sort(function (a, b) { return (WANTED.test(b.name) ? 1 : 0) - (WANTED.test(a.name) ? 1 : 0) || a.name.localeCompare(b.name); });
+    return '<div class="card src"><div class="card-head"><h2>' + esc(st.label) + '</h2><span class="sub">' + list.length + ' people</span></div><div class="card-body flush">' +
+      list.map(function (p) {
+        var i = people.indexOf(p); var hit = WANTED.test(p.name);
+        return '<label class="person ' + (hit ? 'hit' : '') + '"><input type="checkbox" data-i="' + i + '"' + (hit ? ' checked' : '') + '><div class="li-main"><b>' + esc(p.name || '(no name)') + '</b><small>' + esc(p.sub) + '</small></div>' + (hit ? '<span class="badge b-amber">match</span>' : '') + '</label>';
+      }).join('') + '</div></div>';
+  }).join('');
+
+  var sum = document.getElementById('sum');
+  function selected() { return Array.prototype.slice.call(document.querySelectorAll('input[data-i]:checked')).map(function (el) { return people[Number(el.dataset.i)]; }); }
+  function refresh() { var n = selected().length; sum.textContent = n ? n + ' selected' : 'Select at least one person'; }
+  out.addEventListener('change', refresh); refresh();
+
+  document.getElementById('dl').addEventListener('click', function () {
+    var sel = selected();
+    if (!sel.length) { refresh(); return; }
+    var related = document.getElementById('related').checked;
+    var data = { users: [], contacts: [], tasks: [], activities: [], meetings: [], resolutions: [], organizations: [], deals: [], tags: [] };
+    var ids = {};
+    sel.forEach(function (p) { if (!ids[p.rec.id]) { data[p.kind].push(p.rec); ids[p.rec.id] = true; } });
+    if (related) {
+      stores.forEach(function (st) {
+        (st.data.tasks || []).forEach(function (t) { if ((ids[t.ownerId] || ids[t.contactId]) && !ids[t.id]) { data.tasks.push(t); ids[t.id] = true; } });
+        (st.data.activities || []).forEach(function (a) { if ((a.contactIds || []).some(function (c) { return ids[c]; }) && !ids[a.id]) { data.activities.push(a); ids[a.id] = true; } });
+        (st.data.meetings || []).forEach(function (m) { if (m.attendance && Object.keys(m.attendance).some(function (c) { return ids[c]; }) && !ids[m.id]) { data.meetings.push(m); ids[m.id] = true; } });
+      });
+      stores.forEach(function (st) {
+        (st.data.resolutions || []).forEach(function (r) { if (r.meetingId && ids[r.meetingId] && !ids[r.id]) { data.resolutions.push(r); ids[r.id] = true; } });
+      });
+    }
+    var file = JSON.stringify({ app: 'first-way-health-crm', kind: 'people-recovery', exportedAt: new Date().toISOString(), data: data }, null, 2);
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([file], { type: 'application/json' }));
+    a.download = 'aetherium-recovered-people-' + new Date().toISOString().slice(0, 10) + '.json';
+    document.body.appendChild(a); a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+    sum.textContent = 'Downloaded ' + sel.length + ' people' + (related ? ' with their related records' : '') + '. Next: production → Settings → Data → Add from file.';
+  });
+})();
+</script>
+</body>
+</html>

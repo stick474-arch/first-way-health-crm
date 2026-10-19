@@ -93,10 +93,11 @@ Views.settings = (() => {
           <div class="card"><div class="card-head"><h2>Data</h2></div><div class="card-body">
             <div class="data-actions">
               <button class="btn" data-act="exportBackup">${UI.icon('download')}Download backup (JSON)</button>
-              ${Cloud.isAdmin ? `<label class="btn">${UI.icon('upload')}Restore from backup<input type="file" accept="application/json,.json" id="restoreFile" hidden></label>` : ''}
+              ${Cloud.canWrite ? `<label class="btn btn-primary" title="Adds people and records from a backup or recovery file. Nothing is deleted.">${UI.icon('upload')}Add from file<input type="file" id="mergeFile" hidden></label>` : ''}
+              ${Cloud.isAdmin ? `<label class="btn" title="Replaces everything with the file">${UI.icon('upload')}Restore from backup (replace all)<input type="file" id="restoreFile" hidden></label>` : ''}
             </div>
             <p class="help" style="margin-top:8px">CSV exports for spreadsheets are on the Contacts, Organizations, Activity log and Resolutions pages.</p>
-            ${S.mode === 'cloud' && Cloud.browserData() ? `<div class="banner info" style="margin-top:10px">${UI.icon('database')}<div><b>This browser still has ${Cloud.browserData().count} records from before the cloud</b>${Cloud.browserData().people.length ? ` (team: ${esc(Cloud.browserData().people.join(', '))})` : ''}. Download them, then use <b>Restore from backup</b> to bring them into the team workspace (restoring replaces what is there).<div style="margin-top:8px"><button class="btn btn-sm" data-act="downloadBrowserData">${UI.icon('download')}Download browser data</button></div></div></div>` : ''}
+            ${S.mode === 'cloud' && Cloud.browserData() ? `<div class="banner info" style="margin-top:10px">${UI.icon('database')}<div><b>This browser still has ${Cloud.browserData().count} records from before the cloud</b>${Cloud.browserData().people.length ? ` (team: ${esc(Cloud.browserData().people.join(', '))})` : ''}. Download them, then use <b>Add from file</b> to bring them into the team workspace, or open <a href="recover.html">the recovery page</a> to pick specific people.<div style="margin-top:8px"><button class="btn btn-sm" data-act="downloadBrowserData">${UI.icon('download')}Download browser data</button></div></div></div>` : ''}
             ${Cloud.isAdmin ? `<hr>
             <div class="data-actions">
               ${S.mode !== 'cloud' && !Cloud.demo ? '<button class="btn" data-act="loadSample">Replace with sample data</button>' : ''}
@@ -120,6 +121,15 @@ Views.settings = (() => {
       if (t.dataset.setting) { S.setSettings({ [t.dataset.setting]: t.value.trim() || 'Aetherium' }); UI.toast('Saved', 'success'); }
       else if (t.dataset.me !== undefined) { S.setMe(t.value); if (S.mode !== 'cloud') S.setSettings({ currentUserId: t.value }); else App.rerender(); UI.toast('Saved', 'success'); }
       else if (t.dataset.cadence) { S.setSettings({ cadence: { ...S.settings.cadence, [t.dataset.cadence]: Math.max(0, Number(t.value) || 0) } }, { silent: true }); UI.toast(`Cadence for ${t.dataset.cadence} saved`, 'success'); }
+      else if (t.id === 'mergeFile' && t.files[0]) {
+        const text = await t.files[0].text();
+        t.value = '';
+        try {
+          const { added, skipped } = S.mergeJSON(text);
+          const parts = Object.entries(added).map(([c, n]) => `${n} ${c}`);
+          UI.toast(parts.length ? `Added ${parts.join(', ')}${skipped.length ? ` · already here: ${skipped.join(', ')}` : ''}` : (skipped.length ? `Already here: ${skipped.join(', ')}` : 'Nothing new in that file'), parts.length ? 'success' : 'info', { duration: 8000 });
+        } catch (err) { UI.toast(err.message || 'That file could not be read', 'error'); }
+      }
       else if (t.id === 'restoreFile' && t.files[0]) {
         const text = await t.files[0].text();
         t.value = '';
