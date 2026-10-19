@@ -100,7 +100,7 @@ Views.settings = (() => {
             <div class="grid grid-3 list-editor">
               <div class="field"><label for="lSources">Lead sources</label><textarea id="lSources" data-list="sources">${esc(st.sources.join('\n'))}</textarea></div>
               <div class="field"><label for="lInd">Industries</label><textarea id="lInd" data-list="industries">${esc(st.industries.join('\n'))}</textarea></div>
-              <div class="field"><label for="lCom">Board committees</label><textarea id="lCom" data-list="committees">${esc(st.committees.join('\n'))}</textarea></div>
+              <div class="field"><label for="lCom">Board committees <button type="button" class="btn btn-sm btn-ghost" data-act="suggestCommittees" style="margin-left:6px; padding:2px 8px;">Use suggested</button></label><textarea id="lCom" data-list="committees">${esc(st.committees.join('\n'))}</textarea></div>
             </div>
             <button class="btn btn-sm" data-act="saveLists" style="margin-top:10px">Save lists</button>
           </div></div>
@@ -164,6 +164,40 @@ Views.settings = (() => {
     }
   }
 
+  // Directors keep committee names as text: when a committee disappears from the list, ask where to move them.
+  const COMMITTEE_GUESS = {
+    'Audit & Finance': 'Finance & Licensing', Compensation: 'People & Governance', 'Governance & Nominating': 'People & Governance',
+    'Clinical Quality': 'Operations & Service Delivery',
+  };
+  function remapCommittees(list) {
+    const members = S.boardMembers({ includeFormer: true });
+    const orphans = [...new Set(members.flatMap((c) => c.board?.committees || []))].filter((n) => !list.includes(n));
+    if (!orphans.length) return;
+    const options = [...list.map((n) => ({ value: n, label: n })), { value: '', label: '— Remove from directors —' }];
+    UI.formModal({
+      title: 'Move directors to the new committees',
+      intro: `Some directors are still on committees that are no longer in the list. Choose where each one goes.`,
+      size: 'md',
+      submitText: 'Move directors',
+      values: Object.fromEntries(orphans.map((n, i) => [`c${i}`, list.includes(COMMITTEE_GUESS[n]) ? COMMITTEE_GUESS[n] : ''])),
+      fields: orphans.map((n, i) => ({
+        name: `c${i}`, type: 'select', span: 2, options,
+        label: `${n} (${members.filter((c) => (c.board?.committees || []).includes(n)).map((c) => S.contactName(c).split(' ')[0]).join(', ')})`,
+      })),
+      onSubmit: (d) => {
+        let moved = 0;
+        members.forEach((c) => {
+          const cur = c.board?.committees || [];
+          if (!cur.some((n) => orphans.includes(n))) return;
+          const next = [...new Set(cur.map((n) => (orphans.includes(n) ? d[`c${orphans.indexOf(n)}`] : n)).filter(Boolean))];
+          S.update('contacts', c.id, { board: { ...c.board, committees: next } });
+          moved++;
+        });
+        UI.toast(`Committees updated for ${U.plural(moved, 'director')}`, 'success');
+      },
+    });
+  }
+
   async function loadMembers() {
     try { members = await Cloud.listMembers(); } catch (e) { members = []; UI.toast(`Could not load team access: ${e.message}`, 'error'); }
     if (location.hash.startsWith('#/settings')) App.rerender();
@@ -172,12 +206,18 @@ Views.settings = (() => {
   return {
     render,
     actions: {
+      suggestCommittees: () => {
+        const ta = document.querySelector('#lCom');
+        if (ta) { ta.value = S.SUGGESTED_COMMITTEES.join('\n'); ta.focus(); }
+        UI.toast('Suggested committees loaded. Press Save lists to apply.', 'info');
+      },
       saveLists: () => {
         const view = document.querySelector('#view');
         const patch = {};
         view.querySelectorAll('[data-list]').forEach((ta) => { patch[ta.dataset.list] = [...new Set(ta.value.split('\n').map((s) => s.trim()).filter(Boolean))]; });
         S.setSettings(patch);
         UI.toast('Lists saved', 'success');
+        remapCommittees(patch.committees || S.settings.committees);
       },
       loadSample: async () => {
         if (!(await UI.confirm('Replace ALL current data with the sample workspace?', { okText: 'Replace with sample' }))) return;

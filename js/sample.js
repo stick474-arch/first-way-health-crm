@@ -17,6 +17,7 @@ const Sample = (() => {
     const jordan = mk('users', { name: 'Jordan Ellis', email: 'jordan@aetherium.com', role: 'Business Development' });
     const taylor = mk('users', { name: 'Taylor Brooks', email: 'taylor@aetherium.com', role: 'Operations' });
     d.settings.currentUserId = me.id;
+    d.settings.committees = ['Audit & Finance', 'Compensation', 'Governance & Nominating', 'Clinical Quality'];
 
     // Tags — "Group: value" keeps the list short and searchable
     const tg = {};

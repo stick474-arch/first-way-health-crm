@@ -81,6 +81,7 @@ const Store = (() => {
   const AGENDA_KINDS = ['Information', 'Discussion', 'Decision'];
   const RESOLUTION_STATUS = ['Proposed', 'Approved', 'Rejected', 'Tabled', 'Withdrawn'];
   const RESOLUTION_METHODS = ['Meeting vote', 'Written consent'];
+  const SUGGESTED_COMMITTEES = ['Finance & Licensing', 'Technology & Security', 'Operations & Service Delivery', 'Growth & Partnerships', 'People & Governance'];
   const STANDARD_AGENDA = [
     { title: 'Call to order & quorum check', kind: 'Information', minutes: 5 },
     { title: 'Approval of previous meeting minutes', kind: 'Decision', minutes: 5 },
@@ -107,7 +108,7 @@ const Store = (() => {
       sources: ['Referral', 'Website', 'LinkedIn', 'Event / conference', 'Cold outreach', 'Partner', 'Board introduction', 'Other'],
       industries: ['Primary care clinic', 'Specialty practice', 'Hospital / health system', 'Employer (wellness benefits)',
         'Senior living', 'Home health', 'Payer / insurer', 'Pharmacy', 'Public sector', 'Other'],
-      committees: ['Audit & Finance', 'Compensation', 'Governance & Nominating', 'Clinical Quality'],
+      committees: ['Finance & Licensing', 'Technology & Security', 'Operations & Service Delivery', 'Growth & Partnerships', 'People & Governance'],
       cadence: {
         Lead: 7, Prospect: 14, Client: 30, 'Past Client': 90, Partner: 45, 'Referral Source': 60,
         Vendor: 0, Investor: 60, 'Board Member': 30, Advisor: 45, Team: 0,
@@ -540,7 +541,7 @@ const Store = (() => {
   return {
     GROUPS, CONTACT_TYPES, ORG_TYPES, ORG_COLORS, ORG_SIZES, PRIORITIES, STAGES, LOST_REASONS, ACTIVITY_TYPES, TASK_KINDS,
     TASK_PRIORITIES, BOARD_ROLES, MEETING_TYPES, MEETING_STATUS, AGENDA_KINDS, RESOLUTION_STATUS, RESOLUTION_METHODS,
-    STANDARD_AGENDA, INAUGURAL_AGENDA, INAUGURAL_RESOLUTIONS, TAG_COLORS, COLLECTIONS, PREFIX,
+    STANDARD_AGENDA, SUGGESTED_COMMITTEES, INAUGURAL_AGENDA, INAUGURAL_RESOLUTIONS, TAG_COLORS, COLLECTIONS, PREFIX,
     get settings() { return db.settings; },
     get firstRun() { return firstRun; },
     set firstRun(v) { firstRun = v; },
