@@ -52,7 +52,8 @@ const Store = (() => {
 
   // ---- Activities & tasks ----------------------------------------------------------------
   const ACTIVITY_TYPES = ['Call', 'Email', 'Meeting', 'Video call', 'Message', 'Note'];
-  const TASK_KINDS = ['Follow-up', 'Board action', 'To-do'];
+  const TASK_KINDS = ['To-do', 'Follow-up', 'Board action', 'Milestone', 'Approval'];
+  const TASK_REPEAT = ['Daily', 'Weekly', 'Monthly', 'Yearly'];
   const TASK_PRIORITIES = ['High', 'Normal', 'Low'];
 
   // ---- Board -----------------------------------------------------------------------------
@@ -596,7 +597,7 @@ const Store = (() => {
   const setMode = (m) => { mode = m; };
 
   return {
-    GROUPS, CONTACT_TYPES, ORG_TYPES, ORG_COLORS, ORG_SIZES, PRIORITIES, STAGES, LOST_REASONS, ACTIVITY_TYPES, TASK_KINDS,
+    GROUPS, CONTACT_TYPES, ORG_TYPES, ORG_COLORS, ORG_SIZES, PRIORITIES, STAGES, LOST_REASONS, ACTIVITY_TYPES, TASK_KINDS, TASK_REPEAT,
     TASK_PRIORITIES, BOARD_ROLES, MEETING_TYPES, MEETING_STATUS, AGENDA_KINDS, RESOLUTION_STATUS, RESOLUTION_METHODS,
     STANDARD_AGENDA, SUGGESTED_COMMITTEES, INAUGURAL_AGENDA, PROJECT_COLORS, PROJECT_STATUS, PROJECT_TEMPLATES, FIN_GROUPS, FIN_CATEGORIES, ACCOUNT_TYPES, CURRENCIES, TXN_STATUS, SUB_CADENCE, SHARE_CLASSES, INAUGURAL_RESOLUTIONS, TAG_COLORS, COLLECTIONS, PREFIX,
     get settings() { return db.settings; },

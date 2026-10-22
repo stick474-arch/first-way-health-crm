@@ -31,7 +31,7 @@ const ChatDock = (() => {
         <button type="button" class="icon-btn sm" data-dock="close" aria-label="Minimize chat" title="Minimize (Esc)">${UI.icon('chevronDown')}</button>
       </header>
       <div class="dock-log chat-log" id="dockLog" aria-live="polite"></div>
-      ${ChatUI.composerHtml(state.channel, ChatUI.drafts[state.channel] || '')}
+      ${ChatUI.composerHtml(state.channel, ChatUI.drafts[state.channel] || '', { compact: true })}
     </div>`;
   }
 
@@ -39,6 +39,7 @@ const ChatDock = (() => {
     const log = el && el.querySelector('#dockLog');
     if (!log) return;
     const nearEnd = log.scrollHeight - log.scrollTop - log.clientHeight < 60;
+    if (ChatUI.editing && log.querySelector('[data-msg-edit]')) return;
     log.innerHTML = Chat.error ? `<div class="empty-sm">${esc(Chat.error)}</div>` : ChatUI.logHtml(state.channel, { compact: true });
     if (scrollToEnd || nearEnd) log.scrollTop = log.scrollHeight;
     if (document.visibilityState === 'visible') Chat.markRead(state.channel);
@@ -63,7 +64,9 @@ const ChatDock = (() => {
       builtFor = key;
       composer = ChatUI.attachComposer(el.querySelector('form'), {
         draftKey: () => state.channel,
-        onSend: async (text) => { const ok = await Chat.send(state.channel, text); paintLog(true); return ok; },
+        channel: () => state.channel,
+        onEditLast: () => ChatUI.editLast(state.channel),
+        onSend: async (text, extra) => { const ok = await Chat.send(state.channel, text, { extra }); paintLog(true); return ok; },
       });
       paintLog(true);
       if (focus) composer.focus();
@@ -102,7 +105,7 @@ const ChatDock = (() => {
     el.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && state.open) { e.preventDefault(); e.stopPropagation(); close(); }
     });
-    Chat.onChange(() => render());
+    Chat.onChange(() => { if (!document.activeElement?.closest?.('.emoji-pop')) render(); });
     window.addEventListener('hashchange', () => render());
     render();
   }
@@ -115,5 +118,5 @@ const ChatDock = (() => {
     setTimeout(() => render({ focus: false }), 80);
   }
 
-  return { mount, open, close, openRef, get state() { return state; } };
+  return { mount, open, close, openRef, repaint: () => paintLog(false), get state() { return state; } };
 })();

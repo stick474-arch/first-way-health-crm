@@ -15,6 +15,7 @@ const App = (() => {
     { id: 'activities', label: 'Activity log', icon: 'activity' },
     { id: 'tasks', label: 'Tasks & projects', icon: 'checkSquare' },
     { id: 'chat', label: 'Team chat', icon: 'message' },
+    { id: 'notes', label: 'My notes', icon: 'note' },
     { sep: 'Governance' },
     { id: 'board', label: 'Board of Directors', icon: 'landmark' },
     { id: 'finance', label: 'Corporate finance', icon: 'dollar' },
@@ -29,7 +30,7 @@ const App = (() => {
     const boardOpen = open.filter((t) => t.kind === 'Board action').length;
     const chatUnread = Chat.unreadTotal();
     const inboxNew = Work.unseen();
-    const counts = { chat: chatUnread ? `<span class="nav-count hot" title="Unread messages">${chatUnread}</span>` : '', tasks: due || inboxNew ? `<span class="nav-count hot" title="Overdue or due today, plus new in your inbox">${due + inboxNew}</span>` : '', board: boardOpen ? `<span class="nav-count" title="Open board action items">${boardOpen}</span>` : '' };
+    const counts = { chat: chatUnread ? `<span class="nav-count hot" title="Unread messages">${chatUnread}</span>` : '', tasks: due || inboxNew ? `<span class="nav-count hot" title="Overdue or due today, plus new in your inbox">${due + inboxNew}</span>` : '', notes: Notes.dueCount() ? `<span class="nav-count hot" title="Note reminders due">${Notes.dueCount()}</span>` : '', board: boardOpen ? `<span class="nav-count" title="Open board action items">${boardOpen}</span>` : '' };
     $('#nav').innerHTML = NAV.map((n) => (n.sep !== undefined
       ? `<div class="nav-sep">${esc(n.sep)}</div>`
       : `<a href="#/${n.id}" class="nav-item ${current.name === n.id ? 'active' : ''}" ${current.name === n.id ? 'aria-current="page"' : ''}>${UI.icon(n.icon)}<span>${esc(n.label)}</span>${counts[n.id] || ''}</a>`)).join('');
@@ -229,6 +230,7 @@ const App = (() => {
     toggleTheme,
     toggleNewMenu: () => toggleNewMenu(),
     exportBackup,
+    ...ChatUI.actions,
     openRef: (ds) => ChatDock.openRef(ds.ref, location.hash.startsWith('#/chat') ? Views.chat.channel : null),
     deleteMsg: async (ds) => {
       if (!(await UI.confirm('Delete this message for everyone?', { okText: 'Delete' }))) return;
@@ -383,6 +385,7 @@ const App = (() => {
     render();
     Chat.onChange(renderNav);
     Chat.start();
+    Notes.start();
     ChatDock.mount();
     if (S.firstRun && Cloud.canWrite) onboarding();
     else if (S.firstRun) UI.toast('This workspace is still empty. An admin needs to set it up.', 'info', { duration: 8000 });

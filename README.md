@@ -50,7 +50,13 @@ Sources: [Ask HN: For your startup, do you use a CRM?](https://news.ycombinator.
 
 **Activity log** — calls, emails, meetings, video calls, messages and notes with clients, partners **and** board members in one timeline; filter by audience, type, person and period; CSV export.
 
-**Tasks & follow-ups** — Overdue / Today / Next 7 days / Later; kinds: Follow-up, Board action, To-do; owners can be team members or directors; completing a follow-up offers to log the interaction.
+**Tasks & projects (Asana-style)** — My tasks (Recently assigned / Overdue / Today / Next week / Later, list or calendar), Inbox, and projects with sections in five views: Overview (status updates, progress, milestones, workload), List (columns edited in place, collapsible sections, sort, filters), Board, Calendar (drag to reschedule) and Timeline. Task panel with subtasks, comments, collaborators, likes, dependencies ("waiting on"), milestones, approvals, recurring tasks, duplicate and copy link; email notifications on assignment.
+
+**Team chat (Slack-style)** — public and private channels, direct messages, threads (also send to channel), reactions and emoji picker, @mentions and @channel, formatting (*bold*, _italic_, ~strike~, code, quotes, lists), polls, pins, bookmarks, saved items, Threads and Mentions views, search with in:/from:, edit (↑) and delete, mark unread, typing indicator, statuses, do-not-disturb, desktop notifications, huddles (video link), slash commands (/task, /remind, /poll, /huddle, /topic, /status…), Ctrl+K quick switcher, and a docked chat window on every page.
+
+**My notes (Google Keep-style)** — private notes and checklists in colored cards, pinned on top, labels, reminders, archive, trash (7 days), search, grid or list, drag to reorder, images by link, share with a teammate, send to chat or turn into a task.
+
+**Corporate finance** — accounts (COP/USD), one ledger mapped to a startup chart of accounts, transfers, founder reimbursables, P&L, burn and runway, subscriptions & licenses with cost per agent, budget vs actual, cap table with vesting, month-end close.
 
 **Board of Directors** — overview with alerts (terms ending in 120 days, overdue action items, no meeting scheduled, board pack due); members; meetings (agenda editor, attendance & quorum, auto-saving minutes, "draft from agenda", printable minutes with signature lines); resolution register with numbering `R-YYYY-NNN`; action items.
 
@@ -101,7 +107,7 @@ Notes: Supabase's built-in email sender is rate-limited (fine for a few users; c
 
 ### Team chat and email
 
-- **Team chat** (#general, #board and private direct messages, live, with who is online): run [`supabase/chat.sql`](supabase/chat.sql) once in the SQL Editor. Demo and local mode keep messages in the browser.
+- **Team chat**: run [`supabase/chat.sql`](supabase/chat.sql) once in the SQL Editor, then the upgrades in order: [`upgrade-01.sql`](supabase/upgrade-01.sql) (projects, finance, custom channels) and [`upgrade-02.sql`](supabase/upgrade-02.sql) (threads, reactions, pins, polls, edits, private channels and private notes). Demo and local mode keep messages and notes in the browser.
 - **Email**: "Send email" on a contact and "Email board" on a meeting open a ready-to-send message (templates for follow-ups, meeting requests, proposals, agendas and minutes) in Gmail, Outlook or the default mail app, log it in the history and can set a follow-up reminder. Sending directly from the app needs an email service (e.g. Resend) and a domain of your own.
 
 ### How sync works

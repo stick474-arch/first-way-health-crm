@@ -364,6 +364,15 @@ const Actions = (() => {
     if (!t) return;
     const done = t.status !== 'done';
     S.update('tasks', t.id, { status: done ? 'done' : 'open', doneAt: done ? U.today() : '', completedBy: done ? (S.currentUser()?.id || '') : '' });
+    if (done && t.repeat && !t.repeatedTo) {
+      const step = (d) => { if (!d) return ''; const x = U.parse(d); if (t.repeat === 'Daily') x.setDate(x.getDate() + 1); else if (t.repeat === 'Weekly') x.setDate(x.getDate() + 7); else if (t.repeat === 'Monthly') x.setMonth(x.getMonth() + 1); else x.setFullYear(x.getFullYear() + 1); return U.toDateStr(x); };
+      const { id, createdAt, updatedAt, comments, likes, doneAt, completedBy, approval, ...rest } = t;
+      const next = S.upsert('tasks', { ...rest, status: 'open', doneAt: '', comments: [], likes: [], due: step(t.due || U.today()), startDate: step(t.startDate), createdBy: S.currentUser()?.id || '' });
+      S.update('tasks', t.id, { repeatedTo: next.id }, { silent: true });
+      UI.toast(`Done. Next one due ${U.fmtDate(next.due)}`, 'success', { actionLabel: 'Open', onAction: () => TaskDrawer.open(next.id) });
+      return;
+    }
+    if (done && (t.blockedBy || []).some((x) => S.get('tasks', x)?.status !== 'done')) UI.toast('Note: this task was still waiting on another one', 'info');
     if (done && t.contactId && t.kind === 'Follow-up') {
       UI.toast('Task completed', 'success', {
         actionLabel: 'Log interaction',
@@ -635,11 +644,14 @@ const Actions = (() => {
       title: existing ? `Edit #${existing.name}` : 'Create a channel',
       size: 'sm',
       submitText: existing ? 'Save' : 'Create channel',
-      intro: existing ? '' : 'Channels are open to everyone on the team. Use them per topic: a client, a project, licenses, operations…',
-      values: existing ? { ...existing } : {},
+      intro: existing ? '' : 'Use channels per topic: a client, a project, licenses, operations… Private channels are only visible to their members.',
+      values: existing ? { ...existing, members: existing.memberEmails || [] } : { members: [Chat.me.email] },
       fields: [
         { name: 'name', label: 'Name', required: true, span: 2, placeholder: 'e.g. licenses', help: 'Lowercase, numbers and dashes. Spaces become dashes.' },
-        { name: 'topic', label: 'What is it for?', span: 2, placeholder: 'e.g. Licenses per agent, costs and vendors' },
+        { name: 'topic', label: 'Topic', span: 2, placeholder: 'e.g. Licenses per agent, costs and vendors' },
+        { name: 'description', label: 'Description', type: 'textarea', rows: 2, span: 2 },
+        ...(existing ? [] : [{ name: 'private', type: 'checkbox', span: 2, checkLabel: 'Make private (only the members below can see it)' }]),
+        ...(existing && !existing.private ? [] : [{ name: 'members', label: 'Members', type: 'chips', span: 2, ...(existing ? {} : { showWhen: 'private:true' }), options: [...new Map([...S.all('users').filter((u) => u.email).map((u) => [u.email.toLowerCase(), u.name]), [Chat.me.email, `${Chat.me.name} (you)`]]).entries()].map(([value, label]) => ({ value, label })), emptyText: 'Team members need an email (Settings → Team).' }]),
         ...(existing ? [{ name: 'archived', type: 'checkbox', span: 2, checkLabel: 'Archive this channel (hidden from the list; messages are kept)' }] : []),
       ],
       onSubmit: (d) => {
@@ -650,12 +662,14 @@ const Actions = (() => {
         let id;
         if (existing) {
           id = existing.id;
-          channels = list.map((c) => (c.id === id ? { ...c, name, topic: d.topic, archived: !!d.archived } : c));
+          channels = list.map((c) => (c.id === id ? { ...c, name, topic: d.topic, description: d.description, archived: !!d.archived, ...(c.private ? { memberEmails: [...new Set([...d.members])] } : {}) } : c));
         } else {
-          id = `c:${name}`;
+          const pre = d.private ? 'p' : 'c';
+          id = `${pre}:${name}`;
           let n = 2;
-          while (list.some((c) => c.id === id)) id = `c:${name}-${n++}`.slice(0, 42);
-          channels = [...list, { id, name, topic: d.topic, createdBy: S.currentUser()?.id || '', archived: false }];
+          while (list.some((c) => c.id === id)) id = `${pre}:${name}-${n++}`.slice(0, 42);
+          const me = Chat.me.email;
+          channels = [...list, { id, name, topic: d.topic, description: d.description, createdBy: S.currentUser()?.id || '', archived: false, ...(d.private ? { private: true, memberEmails: [...new Set([...d.members, me].filter(Boolean))] } : {}) }];
         }
         S.setSettings({ channels });
         UI.toast(existing ? (d.archived ? `#${name} archived` : 'Channel updated') : `#${name} created`, 'success');

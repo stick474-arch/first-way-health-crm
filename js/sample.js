@@ -160,6 +160,42 @@ const Sample = (() => {
     task('Update HIPAA & data-handling policy', day(-40), taylor.id, 'Board action', { meetingId: q3.id }, { status: 'done', doneAt: day(-38) });
     task('Sign line of credit documents', day(-20), me.id, 'Board action', { meetingId: special.id }, { status: 'done', doneAt: day(-21) });
 
+    // Projects (Asana-style): sections, start/due dates, milestones, an approval, dependencies, subtasks
+    const proj = (name, color, ownerId, sectionNames, extra = {}) => mk('projects', {
+      name, color, ownerId, status: 'On track', memberIds: [me.id, jordan.id, taylor.id], view: 'list', archived: false,
+      sections: sectionNames.map((n) => ({ id: U.uid('sec'), name: n })), ...extra,
+    }, -30);
+    const launch = proj('Company launch', 'violet', me.id, ['Legal & incorporation', 'Brand & website', 'Operations', 'Finance'], {
+      due: day(45), description: 'Everything needed to operate: legal entity, brand, tools, licenses and first financial controls.',
+      updates: [{ id: U.uid('upd'), status: 'On track', text: 'Incorporation done; brand guidelines approved. Licenses list due this week.', by: me.id, at: at(-3, 18) }],
+    });
+    const onboard = proj('Brightwater onboarding', 'teal', taylor.id, ['Kickoff', 'Setup', 'Training', 'Go-live'], { due: day(25), status: 'At risk', description: 'Second location live without disrupting the first one.' });
+    const ls = (p, i) => p.sections[i].id;
+    const pt = (p, sec, title, extra = {}) => mk('tasks', {
+      title, projectId: p.id, sectionId: ls(p, sec), ownerId: '', due: '', priority: 'Normal', kind: 'To-do', status: 'open', doneAt: '',
+      contactId: '', orgId: '', dealId: '', meetingId: '', notes: '', tags: [], followerIds: [], comments: [], createdBy: me.id, ...extra,
+    }, -20);
+    pt(launch, 0, 'Register the company (S.A.S.)', { ownerId: me.id, startDate: day(-28), due: day(-18), status: 'done', doneAt: day(-18), completedBy: me.id });
+    pt(launch, 0, 'Open the company bank account', { ownerId: taylor.id, startDate: day(-15), due: day(-6), status: 'done', doneAt: day(-7), completedBy: taylor.id });
+    const legalOk = pt(launch, 0, 'Incorporation complete', { kind: 'Milestone', due: day(-6), status: 'done', doneAt: day(-6) });
+    pt(launch, 1, 'Approve brand guidelines (PDF)', { kind: 'Approval', ownerId: me.id, approval: 'Approved', startDate: day(-10), due: day(-2), status: 'done', doneAt: day(-2), assignedBy: jordan.id });
+    const site = pt(launch, 1, 'Publish the website', { ownerId: jordan.id, startDate: day(-2), due: day(9), priority: 'High', blockedBy: [legalOk.id] });
+    pt(launch, 1, 'Corporate email and shared drive', { ownerId: taylor.id, startDate: day(1), due: day(6) });
+    const lic = pt(launch, 2, 'List the licenses needed per agent (business need vs risk)', { ownerId: me.id, startDate: day(-3), due: day(1), priority: 'High', assignedBy: jordan.id, assignedAt: at(-1, 9),
+      comments: [{ id: U.uid('cmt'), by: jordan.id, name: jordan.name, body: 'Include telephony and the endpoint security we promised Brightwater.', at: at(-1, 11) }], likes: [jordan.id] });
+    pt(launch, 2, 'Present license costs to the board', { ownerId: me.id, startDate: day(2), due: day(8), blockedBy: [lic.id] });
+    pt(launch, 2, 'Company handbook (first version)', { ownerId: taylor.id, startDate: day(5), due: day(20) });
+    pt(launch, 2, 'Operations ready', { kind: 'Milestone', due: day(21) });
+    pt(launch, 3, 'Month-end close', { ownerId: me.id, due: day(10), repeat: 'Monthly' });
+    pt(launch, 3, 'Weekly cash review', { ownerId: taylor.id, due: day(3), repeat: 'Weekly' });
+    pt(onboard, 0, 'Kickoff call with Maria', { ownerId: taylor.id, due: day(-8), status: 'done', doneAt: day(-8), contactId: maria.id, orgId: bright.id });
+    const ob1 = pt(onboard, 1, 'Configure the second location', { ownerId: taylor.id, startDate: day(-4), due: day(4), orgId: bright.id });
+    pt(onboard, 1, 'Assign 4 agents and licenses', { ownerId: jordan.id, startDate: day(0), due: day(6), blockedBy: [ob1.id] });
+    pt(onboard, 2, 'Train front-desk staff', { ownerId: taylor.id, startDate: day(7), due: day(14) });
+    pt(onboard, 3, 'Go-live', { kind: 'Milestone', due: day(18), orgId: bright.id });
+    pt(onboard, 3, 'Two-week check-in', { ownerId: me.id, due: day(32), contactId: maria.id });
+    void site;
+
     // Corporate finance: accounts, five months of movements, subscriptions, budget and cap table
     d.settings.finance = { ...d.settings.finance, baseCurrency: 'COP', usdRate: 4000, agents: 8 };
     const bank = mk('accounts', { name: 'Operating account', type: 'Bank account', currency: 'COP', institution: 'Demo Bank', last4: '4821', openingBalance: 0, openingDate: day(-150) }, -150);
