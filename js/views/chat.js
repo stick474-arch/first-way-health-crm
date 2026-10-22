@@ -1,5 +1,6 @@
 /* Team chat — channels (#general, #board) and direct messages, live, with links to records. */
 Views.chat = (() => {
+  const S = Store;
   const esc = U.esc;
   let root = null;
   let channel = 'general';
@@ -9,7 +10,7 @@ Views.chat = (() => {
     const badge = (ch) => { const n = Chat.unread(ch); return n && ch !== channel ? `<span class="nav-count hot" aria-label="${n} unread">${n}</span>` : ''; };
     const people = Chat.people();
     return `
-      <div class="chat-sec" id="chanHead">Channels</div>
+      <div class="chat-sec chat-sec-row" id="chanHead"><span>Channels</span><button type="button" class="icon-btn sm" data-act="newChannel" aria-label="Create a channel" title="Create a channel">${UI.icon('plus')}</button></div>
       <nav aria-labelledby="chanHead">${Chat.CHANNELS.map((c) => `<a class="chat-link ${c.id === channel ? 'active' : ''}" href="${href(c.id)}" ${c.id === channel ? 'aria-current="page"' : ''}><span class="hash" aria-hidden="true">#</span><span>${esc(c.name)}</span>${badge(c.id)}</a>`).join('')}</nav>
       <div class="chat-sec" id="dmHead">Direct messages</div>
       <nav aria-labelledby="dmHead">${people.length ? people.map((p) => `<a class="chat-link ${p.channel === channel ? 'active' : ''}" href="${href(p.channel)}" title="${esc(p.email)}" ${p.channel === channel ? 'aria-current="page"' : ''}>
@@ -23,7 +24,8 @@ Views.chat = (() => {
     if (!log) return;
     const nearEnd = log.scrollHeight - log.scrollTop - log.clientHeight < 80;
     root.querySelector('#chatSide').innerHTML = sideHtml();
-    root.querySelector('#chatHead').innerHTML = `<h2 id="chatTitle">${esc(ChatUI.titleOf(channel))}</h2><span class="sub">${esc(ChatUI.hintOf(channel))}</span>
+    const custom = (S.settings.channels || []).find((c) => c.id === channel);
+    root.querySelector('#chatHead').innerHTML = `<h2 id="chatTitle">${esc(ChatUI.titleOf(channel))}</h2><span class="sub">${esc(ChatUI.hintOf(channel))}</span>${custom && Cloud.canWrite ? `<button type="button" class="icon-btn sm" data-act="editChannel" data-id="${esc(custom.id)}" aria-label="Edit channel" title="Rename or archive">${UI.icon('edit')}</button>` : ''}
       ${Chat.mode === 'cloud' ? `<span class="right small muted"><span class="dot dot-ok" aria-hidden="true"></span> ${Chat.onlineCount()} online</span>` : '<span class="right small muted">Saved in this browser</span>'}`;
     log.innerHTML = ChatUI.logHtml(channel);
     if (scrollToEnd || nearEnd) log.scrollTop = log.scrollHeight;
@@ -32,6 +34,7 @@ Views.chat = (() => {
   function render(r, params) {
     root = r;
     channel = params[0] || 'general';
+    if (!channel.startsWith('dm:') && !Chat.CHANNELS.some((c) => c.id === channel)) channel = 'general';
     r.innerHTML = `
       ${Parts.pageHead('Team chat', 'Talk in real time with the team and the board. Type @ to link a person, meeting, task or deal; opening a link keeps the chat in a small window.')}
       ${Chat.error ? `<div class="banner warn">${UI.icon('alert')}<div>${esc(Chat.error)}</div></div>` : ''}

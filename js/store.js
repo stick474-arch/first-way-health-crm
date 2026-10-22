@@ -94,9 +94,59 @@ const Store = (() => {
   ];
   const TAG_COLORS = ['teal', 'blue', 'violet', 'amber', 'green', 'red', 'cyan', 'orange', 'pink', 'slate'];
 
+  // ---- Work management (Asana-style) -------------------------------------------------------
+  const PROJECT_COLORS = ['teal', 'blue', 'violet', 'amber', 'green', 'red', 'cyan', 'orange', 'pink', 'slate'];
+  const PROJECT_STATUS = ['On track', 'At risk', 'Off track', 'On hold', 'Complete'];
+  const PROJECT_TEMPLATES = {
+    blank: { label: 'Blank', sections: ['To do', 'Doing', 'Done'] },
+    company: { label: 'Company setup', sections: ['Legal & incorporation', 'Finance & licensing', 'Technology', 'Brand & website', 'Operations'] },
+    board: { label: 'Board follow-up', sections: ['New', 'In progress', 'Waiting on someone', 'Done'] },
+    onboarding: { label: 'Client onboarding', sections: ['Kickoff', 'Setup', 'Training', 'Go-live', 'Hypercare'] },
+    sales: { label: 'Sales campaign', sections: ['Research', 'Outreach', 'Meetings', 'Proposals', 'Closed'] },
+  };
+
+  // ---- Corporate finance -------------------------------------------------------------------
+  // A startup chart of accounts kept deliberately small: every category maps to one P&L line
+  // (revenue, cost of revenue, operating expenses) or sits outside the P&L (financing, transfers).
+  const FIN_GROUPS = [
+    { id: 'revenue', label: 'Revenue', sign: 1, pl: true },
+    { id: 'cogs', label: 'Cost of revenue', sign: -1, pl: true },
+    { id: 'opex', label: 'Operating expenses', sign: -1, pl: true },
+    { id: 'financing', label: 'Financing (not P&L)', sign: 0, pl: false },
+  ];
+  const FIN_CATEGORIES = [
+    { id: 'rev-services', group: 'revenue', name: 'Service revenue' },
+    { id: 'rev-subscriptions', group: 'revenue', name: 'Subscription / recurring revenue' },
+    { id: 'rev-other', group: 'revenue', name: 'Other income' },
+    { id: 'cogs-licenses', group: 'cogs', name: 'Licenses for client delivery (per agent)' },
+    { id: 'cogs-contractors', group: 'cogs', name: 'Delivery contractors' },
+    { id: 'cogs-infra', group: 'cogs', name: 'Hosting & telecom for clients' },
+    { id: 'opex-payroll', group: 'opex', name: 'Payroll & salaries' },
+    { id: 'opex-contractors', group: 'opex', name: 'Contractors & freelancers' },
+    { id: 'opex-software', group: 'opex', name: 'Software & SaaS (internal)' },
+    { id: 'opex-marketing', group: 'opex', name: 'Sales & marketing' },
+    { id: 'opex-legal', group: 'opex', name: 'Legal, accounting & incorporation' },
+    { id: 'opex-office', group: 'opex', name: 'Office, equipment & coworking' },
+    { id: 'opex-travel', group: 'opex', name: 'Travel & meals' },
+    { id: 'opex-bank', group: 'opex', name: 'Bank fees & FX' },
+    { id: 'opex-taxes', group: 'opex', name: 'Taxes & government fees' },
+    { id: 'opex-other', group: 'opex', name: 'Other expenses' },
+    { id: 'fin-capital', group: 'financing', name: 'Founder capital contribution', dir: 1 },
+    { id: 'fin-investment', group: 'financing', name: 'Investment (equity / SAFE)', dir: 1 },
+    { id: 'fin-loan-in', group: 'financing', name: 'Loan received', dir: 1 },
+    { id: 'fin-loan-out', group: 'financing', name: 'Loan repayment', dir: -1 },
+    { id: 'fin-distribution', group: 'financing', name: 'Owner withdrawal / distribution', dir: -1 },
+  ];
+  const ACCOUNT_TYPES = ['Bank account', 'Cash', 'Credit card', 'Payment processor', 'Founder wallet'];
+  const CURRENCIES = ['COP', 'USD'];
+  const TXN_STATUS = ['Cleared', 'Pending', 'Planned'];
+  const SUB_CADENCE = ['Monthly', 'Annual', 'Per seat / month'];
+  const SHARE_CLASSES = ['Common (founders)', 'Options pool', 'SAFE / convertible', 'Preferred'];
+
   const PREFIX = {
     users: 'usr', tags: 'tag', organizations: 'org', contacts: 'con', deals: 'deal',
     activities: 'act', tasks: 'task', meetings: 'mtg', resolutions: 'res',
+    projects: 'prj', accounts: 'acc', transactions: 'txn', subscriptions: 'sub', budgets: 'bud', shareholders: 'shr',
   };
   const COLLECTIONS = Object.keys(PREFIX);
 
@@ -113,14 +163,21 @@ const Store = (() => {
         Lead: 7, Prospect: 14, Client: 30, 'Past Client': 90, Partner: 45, 'Referral Source': 60,
         Vendor: 0, Investor: 60, 'Board Member': 30, Advisor: 45, Team: 0,
       },
+      channels: [], // custom chat channels: { id: 'c:<slug>', name, topic, createdBy, archived }
+      email: { serviceId: '', templateId: '', publicKey: '' }, // optional direct sending (EmailJS)
+      notify: { assign: true, comment: false },
+      finance: { baseCurrency: 'COP', usdRate: 4000, agents: 0 },
     },
     users: [], tags: [], organizations: [], contacts: [], deals: [], activities: [], tasks: [], meetings: [], resolutions: [],
+    projects: [], accounts: [], transactions: [], subscriptions: [], budgets: [], shareholders: [],
   });
 
   function migrate(d) {
     const base = defaults();
     const out = { ...base, ...d, settings: { ...base.settings, ...(d.settings || {}) } };
     out.settings.cadence = { ...base.settings.cadence, ...((d.settings || {}).cadence || {}) };
+    ['email', 'notify', 'finance'].forEach((k) => { out.settings[k] = { ...base.settings[k], ...((d.settings || {})[k] || {}) }; });
+    if (!Array.isArray(out.settings.channels)) out.settings.channels = [];
     COLLECTIONS.forEach((c) => { if (!Array.isArray(out[c])) out[c] = []; });
     if (out.settings.companyName === 'First Way Health') out.settings.companyName = 'Aetherium';
     out.version = 1;
@@ -541,7 +598,7 @@ const Store = (() => {
   return {
     GROUPS, CONTACT_TYPES, ORG_TYPES, ORG_COLORS, ORG_SIZES, PRIORITIES, STAGES, LOST_REASONS, ACTIVITY_TYPES, TASK_KINDS,
     TASK_PRIORITIES, BOARD_ROLES, MEETING_TYPES, MEETING_STATUS, AGENDA_KINDS, RESOLUTION_STATUS, RESOLUTION_METHODS,
-    STANDARD_AGENDA, SUGGESTED_COMMITTEES, INAUGURAL_AGENDA, INAUGURAL_RESOLUTIONS, TAG_COLORS, COLLECTIONS, PREFIX,
+    STANDARD_AGENDA, SUGGESTED_COMMITTEES, INAUGURAL_AGENDA, PROJECT_COLORS, PROJECT_STATUS, PROJECT_TEMPLATES, FIN_GROUPS, FIN_CATEGORIES, ACCOUNT_TYPES, CURRENCIES, TXN_STATUS, SUB_CADENCE, SHARE_CLASSES, INAUGURAL_RESOLUTIONS, TAG_COLORS, COLLECTIONS, PREFIX,
     get settings() { return db.settings; },
     get firstRun() { return firstRun; },
     set firstRun(v) { firstRun = v; },

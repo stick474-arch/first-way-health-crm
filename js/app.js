@@ -13,10 +13,11 @@ const App = (() => {
     { id: 'organizations', label: 'Organizations', icon: 'building' },
     { id: 'pipeline', label: 'Pipeline', icon: 'kanban' },
     { id: 'activities', label: 'Activity log', icon: 'activity' },
-    { id: 'tasks', label: 'Tasks & follow-ups', icon: 'checkSquare' },
+    { id: 'tasks', label: 'Tasks & projects', icon: 'checkSquare' },
     { id: 'chat', label: 'Team chat', icon: 'message' },
     { sep: 'Governance' },
     { id: 'board', label: 'Board of Directors', icon: 'landmark' },
+    { id: 'finance', label: 'Corporate finance', icon: 'dollar' },
     { sep: '' },
     { id: 'settings', label: 'Settings', icon: 'sliders' },
   ];
@@ -27,7 +28,8 @@ const App = (() => {
     const due = open.filter((t) => t.due && U.daysFromToday(t.due) <= 0).length;
     const boardOpen = open.filter((t) => t.kind === 'Board action').length;
     const chatUnread = Chat.unreadTotal();
-    const counts = { chat: chatUnread ? `<span class="nav-count hot" title="Unread messages">${chatUnread}</span>` : '', tasks: due ? `<span class="nav-count hot" title="Overdue or due today">${due}</span>` : '', board: boardOpen ? `<span class="nav-count" title="Open board action items">${boardOpen}</span>` : '' };
+    const inboxNew = Work.unseen();
+    const counts = { chat: chatUnread ? `<span class="nav-count hot" title="Unread messages">${chatUnread}</span>` : '', tasks: due || inboxNew ? `<span class="nav-count hot" title="Overdue or due today, plus new in your inbox">${due + inboxNew}</span>` : '', board: boardOpen ? `<span class="nav-count" title="Open board action items">${boardOpen}</span>` : '' };
     $('#nav').innerHTML = NAV.map((n) => (n.sep !== undefined
       ? `<div class="nav-sep">${esc(n.sep)}</div>`
       : `<a href="#/${n.id}" class="nav-item ${current.name === n.id ? 'active' : ''}" ${current.name === n.id ? 'aria-current="page"' : ''}>${UI.icon(n.icon)}<span>${esc(n.label)}</span>${counts[n.id] || ''}</a>`)).join('');
@@ -74,6 +76,7 @@ const App = (() => {
     viewActions = v.actions || {};
     view.oninput = null;
     view.onchange = null;
+    view.onsubmit = null;
     v.render(view, route.params);
     lockViewForViewers();
     renderNav();
@@ -209,7 +212,7 @@ const App = (() => {
 
   // ---- Roles: viewers get a read-only UI (the database enforces it too) -------------------
   const WRITE_ACTS = new Set(['logActivity', 'toggleTask', 'moveDeal', 'contactMore', 'setAtt', 'attAll', 'agAdd', 'agDelete', 'agMove',
-    'minutesDraft', 'mtgStatus', 'startInaugural', 'removeSample', 'composeEmail', 'makeMain', 'suggestCommittees', 'saveLists', 'loadSample', 'eraseAll', 'removeMember']);
+    'minutesDraft', 'mtgStatus', 'startInaugural', 'removeSample', 'composeEmail', 'makeMain', 'suggestCommittees', 'testBoardEmail', 'saveEmailCfg', 'clearEmailCfg', 'saveLists', 'recordCharge', 'loadSample', 'eraseAll', 'removeMember']);
   const isWriteAction = (act) => /^(new|edit)/.test(act) || WRITE_ACTS.has(act);
 
   function lockViewForViewers() {
@@ -258,7 +261,12 @@ const App = (() => {
   });
 
   // Keyboard: "/" search · "c" contact · "l" log interaction · "t" task · Esc closes
+  // Keyboard: Enter / Space on things that act like buttons (task rows, cards)
   document.addEventListener('keydown', (e) => {
+    if ((e.key === 'Enter' || e.key === ' ') && e.target.matches?.('[role="button"][data-act]')) { e.preventDefault(); e.target.click(); }
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && TaskDrawer.openId && !UI.hasModal()) { TaskDrawer.close(); return; }
     if (e.key === 'Escape') {
       UI.closeMenu();
       toggleNewMenu(false);
@@ -381,5 +389,5 @@ const App = (() => {
   }
 
   boot();
-  return { rerender, render, exportBackup, onboarding };
+  return { rerender, render, exportBackup, onboarding, refreshNav: renderNav };
 })();

@@ -82,12 +82,17 @@ create table if not exists public.crm_records (
   id          text primary key,
   collection  text not null check (collection in (
                 'settings', 'users', 'tags', 'organizations', 'contacts', 'deals',
-                'activities', 'tasks', 'meetings', 'resolutions')),
+                'activities', 'tasks', 'meetings', 'resolutions',
+                'projects', 'accounts', 'transactions', 'subscriptions', 'budgets', 'shareholders')),
   data        jsonb not null,
   created_at  timestamptz not null default now(),
   updated_at  timestamptz not null default now(),
   updated_by  uuid default auth.uid()
 );
+alter table public.crm_records drop constraint if exists crm_records_collection_check;
+alter table public.crm_records add constraint crm_records_collection_check check (collection in (
+  'settings', 'users', 'tags', 'organizations', 'contacts', 'deals', 'activities', 'tasks', 'meetings', 'resolutions',
+  'projects', 'accounts', 'transactions', 'subscriptions', 'budgets', 'shareholders'));
 create index if not exists crm_records_collection_idx on public.crm_records (collection);
 create index if not exists crm_records_data_gin_idx on public.crm_records using gin (data jsonb_path_ops);
 

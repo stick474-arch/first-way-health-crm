@@ -62,6 +62,38 @@ Views.settings = (() => {
       <div style="margin-top:8px"><button class="btn btn-sm btn-danger" data-act="removeSample">${UI.icon('trash')}Remove sample data</button></div></div></div>`;
   }
 
+  function emailCard() {
+    const e = S.settings.email || {};
+    const n = S.settings.notify || {};
+    const on = Mailer.configured();
+    const board = S.boardMembers().filter((c) => c.email);
+    return `<div class="card"><div class="card-head"><h2>${UI.icon('mail')} Email</h2><div class="right">${UI.badge(on ? 'Direct sending on' : 'Opens your mail app', on ? 'green' : 'slate')}</div></div>
+      <div class="card-body">
+        <p class="muted small">${on ? 'Emails are sent directly from the app through EmailJS, from the connected Gmail account.' : 'Emails open ready to send in Gmail, Outlook or your mail app. Turn on direct sending below (free, no domain needed).'}</p>
+        <div class="row wrap" style="margin:10px 0 4px;">
+          <button class="btn btn-brand" data-act="testBoardEmail" ${board.length ? '' : 'disabled'}>${UI.icon('mail')}Send test email to the board</button>
+          <span class="muted small">${board.length ? `To ${board.map((c) => esc(S.contactName(c).split(' ')[0])).join(', ')} (${board.length})` : 'Add board members with an email first.'}</span>
+        </div>
+        <h3 style="font-size:14px;margin:16px 0 6px">Notifications</h3>
+        <label class="check"><input type="checkbox" data-notify="assign" ${n.assign !== false ? 'checked' : ''}> <span>Email people when a task is assigned to them</span></label><br>
+        <label class="check"><input type="checkbox" data-notify="comment" ${n.comment ? 'checked' : ''}> <span>Email the assignee and collaborators when someone comments on a task</span></label>
+        ${Cloud.isAdmin ? `<details style="margin-top:14px"><summary style="cursor:pointer;font-weight:600">Direct sending with EmailJS (${on ? 'connected' : 'set up in 5 minutes'})</summary>
+          <ol class="small" style="line-height:1.6;padding-left:18px;margin:8px 0">
+            <li>Create a free account at <a href="https://www.emailjs.com" target="_blank" rel="noopener">emailjs.com</a> (200 emails/month).</li>
+            <li><b>Email Services → Add service → Gmail</b>, connect the company Gmail. Copy the <b>Service ID</b>.</li>
+            <li><b>Email Templates → Create</b>: To email <code>{{to_email}}</code>, Subject <code>{{subject}}</code>, Content <code>{{message}}</code>, From name <code>{{from_name}}</code>, Reply to <code>{{reply_to}}</code>. Copy the <b>Template ID</b>.</li>
+            <li><b>Account → General</b>: copy the <b>Public key</b>. In <b>Account → Security</b>, allow only <code>stick474-arch.github.io</code>.</li>
+          </ol>
+          <div class="form-grid">
+            <div class="field"><label for="ejService">Service ID</label><input id="ejService" class="input" value="${esc(e.serviceId || '')}" placeholder="service_xxx"></div>
+            <div class="field"><label for="ejTemplate">Template ID</label><input id="ejTemplate" class="input" value="${esc(e.templateId || '')}" placeholder="template_xxx"></div>
+            <div class="field span-2"><label for="ejKey">Public key</label><input id="ejKey" class="input" value="${esc(e.publicKey || '')}" placeholder="Your EmailJS public key"></div>
+          </div>
+          <div class="row" style="margin-top:10px"><button class="btn btn-sm btn-primary" data-act="saveEmailCfg">Save</button>${on ? '<button class="btn btn-sm btn-ghost" data-act="clearEmailCfg">Turn off</button>' : ''}</div>
+        </details>` : ''}
+      </div></div>`;
+  }
+
   function render(root) {
     const st = S.settings;
     const me = S.currentUser();
@@ -81,6 +113,7 @@ Views.settings = (() => {
             </div>
           </div></div>
           ${cloudCard()}
+          ${emailCard()}
           <div class="card"><div class="card-head"><h2>Team members</h2><span class="sub">people who own contacts, deals and tasks</span>
             <div class="right"><button class="btn btn-sm" data-act="newUser">${UI.icon('plus')}Add</button></div></div>
             <div class="card-body flush"><div class="list">${S.all('users').map((u) => `<div class="list-item clickable" data-act="editUser" data-id="${u.id}">
@@ -128,6 +161,11 @@ Views.settings = (() => {
 
     root.onchange = async (e) => {
       const t = e.target;
+      if (t.dataset.notify) {
+        S.setSettings({ notify: { ...S.settings.notify, [t.dataset.notify]: t.checked } }, { silent: true });
+        UI.toast('Saved', 'success');
+        return;
+      }
       if (t.dataset.memberRole) {
         try { await Cloud.setMemberRole(t.dataset.memberRole, t.value); UI.toast(`${t.dataset.memberRole} is now ${t.value}`, 'success'); } catch (err) { UI.toast(err.message, 'error'); }
         await loadMembers();
@@ -244,6 +282,26 @@ Views.settings = (() => {
         const n = S.removeSample();
         UI.toast(`Removed ${n} sample records. The workspace is ready for your own data.`, 'success', { duration: 7000 });
       },
+      testBoardEmail: async () => {
+        const board = S.boardMembers().filter((c) => c.email);
+        if (!board.length) { UI.toast('No board member has an email yet', 'error'); return; }
+        const me = S.currentUser()?.name || 'The team';
+        const when = new Date().toLocaleString('en-US', { dateStyle: 'full', timeStyle: 'short' });
+        const body = `Hello board,\n\nThis is a test email from the ${S.settings.companyName || 'Aetherium'} CRM & Board workspace, sent by ${me} on ${when}.\n\nRecipients: ${board.map((c) => `${S.contactName(c)} <${c.email}>`).join(', ')}.\n\nIf you received it, board emails work. Please reply to confirm.\n\nWorkspace: ${Mailer.APP_URL}`;
+        try {
+          await Mailer.deliver({ to: board.map((c) => c.email).join(', '), subject: `Test · ${S.settings.companyName || 'Aetherium'} board email`, body });
+          if (Cloud.canWrite) S.upsert('activities', { type: 'Email', date: U.now(), subject: 'Test email to the board', notes: body, contactIds: board.map((c) => c.id), orgId: S.mainOrg()?.id || '', dealId: '', meetingId: '', ownerId: S.currentUser()?.id || '' });
+          if (!Mailer.configured()) UI.toast('Opened in your mail with all board members. Press send there.', 'info', { duration: 7000 });
+        } catch (err) { UI.toast(`Test email failed: ${err.message}`, 'error', { duration: 9000 }); }
+      },
+      saveEmailCfg: () => {
+        const v = (id) => (document.querySelector(`#${id}`)?.value || '').trim();
+        const email = { serviceId: v('ejService'), templateId: v('ejTemplate'), publicKey: v('ejKey') };
+        if (Object.values(email).some((x) => !x)) { UI.toast('Fill in the three EmailJS values', 'error'); return; }
+        S.setSettings({ email });
+        UI.toast('Direct sending is on. Try “Send test email to the board”.', 'success', { duration: 7000 });
+      },
+      clearEmailCfg: () => { S.setSettings({ email: { serviceId: '', templateId: '', publicKey: '' } }); UI.toast('Direct sending turned off'); },
       signOut: () => Cloud.signOut(),
       downloadBrowserData: () => Cloud.downloadBrowserData(),
       removeMember: async (ds) => {

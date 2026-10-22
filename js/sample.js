@@ -160,6 +160,46 @@ const Sample = (() => {
     task('Update HIPAA & data-handling policy', day(-40), taylor.id, 'Board action', { meetingId: q3.id }, { status: 'done', doneAt: day(-38) });
     task('Sign line of credit documents', day(-20), me.id, 'Board action', { meetingId: special.id }, { status: 'done', doneAt: day(-21) });
 
+    // Corporate finance: accounts, five months of movements, subscriptions, budget and cap table
+    d.settings.finance = { ...d.settings.finance, baseCurrency: 'COP', usdRate: 4000, agents: 8 };
+    const bank = mk('accounts', { name: 'Operating account', type: 'Bank account', currency: 'COP', institution: 'Demo Bank', last4: '4821', openingBalance: 0, openingDate: day(-150) }, -150);
+    const usd = mk('accounts', { name: 'USD account', type: 'Bank account', currency: 'USD', institution: 'Demo USD Bank', last4: '0093', openingBalance: 0, openingDate: day(-150) }, -150);
+    const card = mk('accounts', { name: 'Company card', type: 'Credit card', currency: 'COP', institution: 'Demo Bank', last4: '7710', openingBalance: 0, openingDate: day(-150) }, -150);
+    const txn = (n, description, category, amount, accountId, extra = {}) => mk('transactions', { date: day(n), description, category, amount, accountId, status: 'Cleared', ...extra }, n);
+    [me, jordan, taylor].forEach((u) => txn(-148, `Capital contribution · ${u.name}`, 'fin-capital', 40000000, bank.id, { contributorId: u.id }));
+    txn(-120, 'Pre-seed SAFE · Pinecrest Capital', 'fin-investment', 50000, usd.id, { orgId: pinecrest.id, fxRate: 4100 });
+    txn(-140, 'Incorporation (S.A.S.) and notary', 'opex-legal', 6200000, bank.id, { invoiceRef: 'N-2231' });
+    txn(-60, 'Transfer USD to operating account', '', 15000, usd.id, { kind: 'transfer', toAccountId: bank.id, toAmount: 59250000 });
+    const monthDay = (back, dd) => { const x = new Date(); x.setDate(1); x.setMonth(x.getMonth() - back); x.setDate(dd); return U.toDateStr(x); };
+    for (let back = 4; back >= 0; back--) {
+      const at5 = monthDay(back, 5);
+      const at25 = monthDay(back, 25);
+      const days = (s) => U.daysFromToday(s);
+      if (days(at5) <= 0) {
+        txn(days(at5), 'Coworking membership', 'opex-office', 2500000, card.id);
+        txn(days(at5), 'Google Workspace', 'opex-software', 420000, card.id);
+        if (back <= 2) txn(days(at5), 'Contact-center agent licenses (8 seats)', 'cogs-licenses', 880, usd.id);
+      }
+      if (days(at25) <= 0) {
+        txn(days(at25), 'Payroll', 'opex-payroll', back > 2 ? 12000000 : 24000000, bank.id);
+        if (back <= 2) txn(days(at25), `Monthly service · ${bright.name}`, 'rev-services', 18000000, bank.id, { orgId: bright.id, invoiceRef: `INV-00${5 - back}` });
+        txn(days(at25), 'LinkedIn ads', 'opex-marketing', back <= 1 ? 3000000 : 1500000, card.id);
+      }
+    }
+    txn(-9, 'Laptop for operations', 'opex-office', 4300000, card.id, { paidBy: taylor.id, notes: 'Bought with a personal card; reimburse next payroll.' });
+    txn(-4, 'Client lunch · Brightwater', 'opex-travel', 380000, card.id, { paidBy: jordan.id, orgId: bright.id });
+    txn(12, `Second location kickoff · ${bright.name}`, 'rev-services', 9000000, bank.id, { status: 'Planned', orgId: bright.id });
+    mk('subscriptions', { name: 'Contact-center agent license', need: 'Business need', category: 'cogs-licenses', cadence: 'Per seat / month', seats: 8, amount: 110, currency: 'USD', nextDate: monthDay(-1, 5), accountId: usd.id, ownerId: taylor.id, status: 'Active' });
+    mk('subscriptions', { name: 'Google Workspace', need: 'Business need', category: 'opex-software', cadence: 'Per seat / month', seats: 6, amount: 70000, currency: 'COP', nextDate: monthDay(-1, 5), accountId: card.id, ownerId: me.id, status: 'Active' });
+    mk('subscriptions', { name: 'Endpoint security & backups', need: 'Risk & compliance', category: 'cogs-infra', cadence: 'Per seat / month', seats: 8, amount: 9, currency: 'USD', nextDate: monthDay(-1, 10), accountId: usd.id, ownerId: taylor.id, status: 'Active', notes: 'Required by client contracts.' });
+    mk('subscriptions', { name: 'Password manager', need: 'Risk & compliance', category: 'opex-software', cadence: 'Annual', amount: 480, currency: 'USD', nextDate: day(20), accountId: usd.id, ownerId: taylor.id, status: 'Active' });
+    mk('subscriptions', { name: 'Design tool', need: 'Nice to have', category: 'opex-software', cadence: 'Monthly', amount: 15, currency: 'USD', nextDate: day(8), accountId: card.id, ownerId: jordan.id, status: 'Trial' });
+    [['rev-services', 25000000], ['cogs-licenses', 4000000], ['opex-payroll', 24000000], ['opex-office', 3000000], ['opex-software', 600000], ['opex-marketing', 2000000], ['opex-travel', 500000]]
+      .forEach(([category, monthly]) => mk('budgets', { category, monthly }));
+    [me, jordan, taylor].forEach((u) => mk('shareholders', { personId: u.id, shareClass: 'Common (founders)', shares: 3000000, vestingStart: day(-150), vestingMonths: 48, cliffMonths: 12 }));
+    mk('shareholders', { name: 'Option pool (unallocated)', shareClass: 'Options pool', shares: 1000000, notes: 'Reserved for key hires' });
+    mk('shareholders', { name: 'Pinecrest Capital (SAFE)', shareClass: 'SAFE / convertible', shares: 0, notes: 'USD 50,000 SAFE · converts at the next priced round' });
+
     return d;
   }
 

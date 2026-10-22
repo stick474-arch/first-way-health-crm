@@ -314,36 +314,48 @@ const Actions = (() => {
   }
 
   // ---- Tasks -----------------------------------------------------------------------------
+  // Existing tasks open in the side panel; new ones are created here, then can be opened there.
   function editTask(ds = {}) {
-    const existing = S.get('tasks', ds.id);
+    if (ds.id && S.get('tasks', ds.id)) { TaskDrawer.open(ds.id); return; }
     const contact = S.get('contacts', ds.contact);
-    const values = existing || {
-      kind: ds.kind || (ds.meeting ? 'Board action' : 'Follow-up'), priority: 'Normal', due: U.addDays(U.today(), ds.meeting ? 14 : 3),
+    const projectId = ds.project || '';
+    const project = S.get('projects', projectId);
+    const values = {
+      kind: ds.kind || (ds.meeting ? 'Board action' : project ? 'To-do' : 'Follow-up'), priority: 'Normal', due: U.addDays(U.today(), ds.meeting ? 14 : 3),
       ownerId: ds.owner || S.currentUser()?.id || '', contactId: ds.contact || '', orgId: ds.org || contact?.orgId || '', dealId: ds.deal || '', meetingId: ds.meeting || '',
+      projectId,
     };
+    const projectOpts = S.all('projects').filter((p) => !p.archived).map((p) => ({ value: p.id, label: p.name }));
     UI.formModal({
-      title: existing ? 'Edit task' : values.kind === 'Board action' ? 'New board action item' : 'New task',
+      title: values.kind === 'Board action' ? 'New board action item' : 'New task',
       size: 'lg', values,
-      submitText: existing ? 'Save changes' : 'Create task',
+      submitText: 'Create task',
       fields: [
         { name: 'title', label: 'What needs to happen?', required: true, span: 2 },
+        { name: 'ownerId', label: 'Assignee', type: 'select', options: UI.opts.owners(), empty: '— Unassigned —', help: 'Team members or board members. They get an email if notifications are on.' },
         { name: 'due', label: 'Due date', type: 'date' },
-        { name: 'ownerId', label: 'Owner', type: 'select', options: UI.opts.owners(), empty: '— Unassigned —', help: 'Team members or board members.' },
-        { name: 'kind', label: 'Kind', type: 'select', options: S.TASK_KINDS },
+        ...(projectOpts.length ? [{ name: 'projectId', label: 'Project', type: 'select', options: projectOpts, empty: '— No project —' }] : []),
         { name: 'priority', label: 'Priority', type: 'select', options: S.TASK_PRIORITIES },
+        { name: 'kind', label: 'Type', type: 'select', options: S.TASK_KINDS },
+        { name: 'tags', label: 'Tags', type: 'chips', options: UI.opts.tags(), span: 2, emptyText: 'Create tags in Settings.' },
         { type: 'section', label: 'Linked to' },
-        { name: 'contactId', label: 'Contact', type: 'select', options: UI.opts.contacts(), empty: '— None —' },
+        { name: 'contactId', label: 'Person', type: 'select', options: UI.opts.contacts(), empty: '— None —' },
         { name: 'orgId', label: 'Organization', type: 'select', options: UI.opts.orgs(), empty: '— None —' },
-        { name: 'dealId', label: 'Deal', type: 'select', options: UI.opts.deals(existing?.dealId), empty: '— None —' },
+        { name: 'dealId', label: 'Deal', type: 'select', options: UI.opts.deals(), empty: '— None —' },
         { name: 'meetingId', label: 'Board meeting', type: 'select', options: UI.opts.meetings(), empty: '— None —' },
-        { name: 'notes', label: 'Notes', type: 'textarea', rows: 2, span: 2 },
+        { name: 'notes', label: 'Description', type: 'textarea', rows: 2, span: 2 },
       ],
       onSubmit: (d) => {
         if (!d.orgId && d.contactId) d.orgId = S.get('contacts', d.contactId)?.orgId || '';
-        S.upsert('tasks', { ...(existing || { status: 'open', doneAt: '' }), ...d });
-        UI.toast(existing ? 'Task updated' : 'Task created', 'success');
+        const p = S.get('projects', d.projectId);
+        const sectionId = p ? (Work.sectionsOf(p)[0]?.id || '') : '';
+        const t = S.upsert('tasks', {
+          status: 'open', doneAt: '', followerIds: [], comments: [], createdBy: S.currentUser()?.id || '', ...d, projectId: d.projectId || '', sectionId,
+          order: p ? S.all('tasks').filter((x) => x.projectId === p.id && x.sectionId === sectionId).length : 0,
+        });
+        Work.assigned(t, '');
+        UI.toast('Task created', 'success', { actionLabel: 'Open', onAction: () => TaskDrawer.open(t.id) });
       },
-      onDelete: existing ? () => { S.remove('tasks', existing.id); UI.toast('Task deleted'); } : null,
     });
   }
 
@@ -351,7 +363,7 @@ const Actions = (() => {
     const t = S.get('tasks', ds.id);
     if (!t) return;
     const done = t.status !== 'done';
-    S.update('tasks', t.id, { status: done ? 'done' : 'open', doneAt: done ? U.today() : '' });
+    S.update('tasks', t.id, { status: done ? 'done' : 'open', doneAt: done ? U.today() : '', completedBy: done ? (S.currentUser()?.id || '') : '' });
     if (done && t.contactId && t.kind === 'Follow-up') {
       UI.toast('Task completed', 'success', {
         actionLabel: 'Log interaction',
@@ -512,7 +524,8 @@ const Actions = (() => {
     { value: 'outlook', label: 'Outlook on the web (opens a new tab)' },
     { value: 'mailto', label: 'Default mail app on this computer' },
   ];
-  const mailPref = () => { try { return localStorage.getItem('fwh-mail-client') || 'gmail'; } catch { return 'gmail'; } };
+  const mailPref = () => { if (Mailer.configured()) return 'direct'; try { return localStorage.getItem('fwh-mail-client') || 'gmail'; } catch { return 'gmail'; } };
+  const mailClients = () => (Mailer.configured() ? [{ value: 'direct', label: 'Send directly from the app' }, ...MAIL_CLIENTS] : MAIL_CLIENTS);
 
   function mailUrl(client, to, subject, body) {
     const e = encodeURIComponent;
@@ -563,7 +576,7 @@ const Actions = (() => {
       fields: [
         { name: 'to', label: 'To', required: true, span: 2, help: 'Separate several addresses with commas.' },
         { name: 'template', label: 'Start from', type: 'select', options: Object.entries(templates).map(([value, t]) => ({ value, label: t.label })) },
-        { name: 'client', label: 'Send with', type: 'select', options: MAIL_CLIENTS },
+        { name: 'client', label: 'Send with', type: 'select', options: mailClients() },
         { name: 'subject', label: 'Subject', required: true, span: 2 },
         { name: 'body', label: 'Message', type: 'textarea', rows: 11, span: 2 },
         { name: 'followUp', label: 'Follow up if no reply', type: 'select', options: [{ value: '', label: 'No reminder' }, { value: '3', label: 'In 3 days' }, { value: '7', label: 'In 1 week' }, { value: '14', label: 'In 2 weeks' }] },
@@ -576,11 +589,19 @@ const Actions = (() => {
           form.elements.body.value = t.body;
         });
       },
-      onSubmit: (d) => {
-        const url = mailUrl(d.client, d.to, d.subject, d.body);
-        if (url.length > 7500) { UI.toast('That message is too long to hand over to your mail. Shorten it or paste the rest there.', 'error'); return false; }
-        try { localStorage.setItem('fwh-mail-client', d.client); } catch { /* ignore */ }
-        if (d.client === 'mailto') window.location.href = url; else window.open(url, '_blank', 'noopener');
+      onSubmit: async (d) => {
+        if (d.client === 'direct') {
+          try {
+            const r = await Mailer.send({ to: d.to, subject: d.subject, body: d.body });
+            if (!r.sent) { UI.toast(`Not sent: ${r.failed.join(', ')}`, 'error'); return false; }
+            if (r.failed.length) UI.toast(`Failed for ${r.failed.join(', ')}`, 'error', { duration: 8000 });
+          } catch (err) { UI.toast(`Not sent: ${err.message}`, 'error'); return false; }
+        } else {
+          const url = mailUrl(d.client, d.to, d.subject, d.body);
+          if (url.length > 7500) { UI.toast('That message is too long to hand over to your mail. Shorten it or paste the rest there.', 'error'); return false; }
+          try { localStorage.setItem('fwh-mail-client', d.client); } catch { /* ignore */ }
+          if (d.client === 'mailto') window.location.href = url; else window.open(url, '_blank', 'noopener');
+        }
         if (d.log && Cloud.canWrite) {
           const emails = d.to.toLowerCase().split(/[,;\s]+/).filter(Boolean);
           const people = S.all('contacts').filter((c) => c.email && emails.includes(c.email.toLowerCase()));
@@ -595,11 +616,50 @@ const Actions = (() => {
               contactId: people[0]?.id || '', orgId: people[0]?.orgId || '', dealId: '', meetingId: meeting?.id || '', notes: `Email sent ${U.fmtDate(U.today())}`,
             });
           }
-          UI.toast(`Opened in ${MAIL_CLIENTS.find((c) => c.value === d.client).label.split(' (')[0]} · logged${d.followUp ? ' · reminder set' : ''}`, 'success');
+          UI.toast(`${d.client === 'direct' ? 'Sent' : `Opened in ${MAIL_CLIENTS.find((c) => c.value === d.client).label.split(' (')[0]}`} · logged${d.followUp ? ' · reminder set' : ''}`, 'success');
           return act;
         }
         UI.toast('Opened in your mail', 'success');
         return true;
+      },
+    });
+  }
+
+  // ---- Chat channels ---------------------------------------------------------------------
+  const slugify = (s) => String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40);
+
+  function editChannel(ds = {}) {
+    const list = S.settings.channels || [];
+    const existing = list.find((c) => c.id === ds.id);
+    UI.formModal({
+      title: existing ? `Edit #${existing.name}` : 'Create a channel',
+      size: 'sm',
+      submitText: existing ? 'Save' : 'Create channel',
+      intro: existing ? '' : 'Channels are open to everyone on the team. Use them per topic: a client, a project, licenses, operations…',
+      values: existing ? { ...existing } : {},
+      fields: [
+        { name: 'name', label: 'Name', required: true, span: 2, placeholder: 'e.g. licenses', help: 'Lowercase, numbers and dashes. Spaces become dashes.' },
+        { name: 'topic', label: 'What is it for?', span: 2, placeholder: 'e.g. Licenses per agent, costs and vendors' },
+        ...(existing ? [{ name: 'archived', type: 'checkbox', span: 2, checkLabel: 'Archive this channel (hidden from the list; messages are kept)' }] : []),
+      ],
+      onSubmit: (d) => {
+        const name = slugify(d.name);
+        if (!name) { UI.toast('Use letters or numbers in the name', 'error'); return false; }
+        if (['general', 'board'].includes(name) || list.some((c) => c.name === name && c.id !== existing?.id)) { UI.toast(`#${name} already exists`, 'error'); return false; }
+        let channels;
+        let id;
+        if (existing) {
+          id = existing.id;
+          channels = list.map((c) => (c.id === id ? { ...c, name, topic: d.topic, archived: !!d.archived } : c));
+        } else {
+          id = `c:${name}`;
+          let n = 2;
+          while (list.some((c) => c.id === id)) id = `c:${name}-${n++}`.slice(0, 42);
+          channels = [...list, { id, name, topic: d.topic, createdBy: S.currentUser()?.id || '', archived: false }];
+        }
+        S.setSettings({ channels });
+        UI.toast(existing ? (d.archived ? `#${name} archived` : 'Channel updated') : `#${name} created`, 'success');
+        go(existing && d.archived ? '#/chat/general' : `#/chat/${encodeURIComponent(id)}`);
       },
     });
   }
@@ -630,5 +690,7 @@ const Actions = (() => {
     editTag,
     go: (ds) => go(ds.href),
     composeEmail,
+    newChannel: () => editChannel({}),
+    editChannel,
   };
 })();

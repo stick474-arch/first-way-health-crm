@@ -14,6 +14,10 @@ create table if not exists public.crm_messages (
   author_name  text not null default '',
   created_at   timestamptz not null default now()
 );
+-- Allowed channels: built-in, custom 'c:<slug>' and direct messages
+alter table public.crm_messages drop constraint if exists crm_messages_channel_check;
+alter table public.crm_messages add constraint crm_messages_channel_check
+  check (channel ~ '^(general|board|c:[a-z0-9-]{1,40}|dm:[^|]+\|[^|]+)$');
 create index if not exists crm_messages_channel_idx on public.crm_messages (channel, created_at desc);
 
 -- Can the signed-in person see this channel?

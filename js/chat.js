@@ -2,9 +2,13 @@
    Cloud mode uses the crm_messages table (supabase/chat.sql) and Supabase Realtime.
    Local and demo modes keep messages in this browser. */
 const Chat = (() => {
-  const CHANNELS = [
+  const BUILTIN = [
     { id: 'general', name: 'general', hint: 'Everyone on the team' },
     { id: 'board', name: 'board', hint: 'Board of directors' },
+  ];
+  const channelsList = () => [
+    ...BUILTIN,
+    ...(Store.settings.channels || []).filter((c) => !c.archived).map((c) => ({ id: c.id, name: c.name, hint: c.topic || 'Team channel', custom: true })),
   ];
   const NS = (window.FWH_CONFIG || {}).demo ? 'fwh-demo' : 'fwh-crm';
   const LS_MSGS = `${NS}-chat`;
@@ -97,7 +101,7 @@ const Chat = (() => {
       return true;
     }
     const { data, error: e } = await client.from('crm_messages').insert({ channel, body, author_name: me.name }).select().single();
-    if (e) { UI.toast(`Message not sent: ${e.message}`, 'error'); return false; }
+    if (e) { UI.toast(/crm_messages_channel_check/.test(e.message || '') ? 'Custom channels need a database upgrade: an admin runs supabase/upgrade-01.sql.' : `Message not sent: ${e.message}`, 'error', { duration: 8000 }); return false; }
     add(data);
     return true;
   }
@@ -137,10 +141,11 @@ const Chat = (() => {
   }
 
   return {
-    CHANNELS, start, send, remove, markRead, unread, people, dmId,
+    get CHANNELS() { return channelsList(); },
+    start, send, remove, markRead, unread, people, dmId,
     onChange: (fn) => listeners.push(fn),
     messagesIn: (channel) => messages.filter((m) => m.channel === channel),
-    unreadTotal: () => [...CHANNELS.map((c) => c.id), ...people().map((p) => p.channel)].reduce((n, ch) => n + unread(ch), 0),
+    unreadTotal: () => [...channelsList().map((c) => c.id), ...people().map((p) => p.channel)].reduce((n, ch) => n + unread(ch), 0),
     isOnline: (email) => !!online[lower(email)],
     onlineCount: () => Object.keys(online).length,
     get me() { return me; },
