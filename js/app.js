@@ -343,6 +343,7 @@ const App = (() => {
   function loadDemoData() {
     const data = Sample.build('Alex Rivera');
     S.replaceAll(data);
+    S.setMeta({ demoVersion: Sample.VERSION });
     S.setMe(data.users[0].id);
     S.firstRun = false;
   }
@@ -378,6 +379,11 @@ const App = (() => {
       if (S.firstRun) {
         loadDemoData();
         UI.toast('Welcome to the demo. Everything here is fictional and stays in your browser.', 'info', { duration: 7000 });
+      } else if ((S.meta().demoVersion || 0) < Sample.VERSION) {
+        // Older demo data (before finance, agents, projects…): start over with the current sample
+        ['fwh-demo-chat', 'fwh-demo-chat-marks', 'fwh-demo-chat-read', 'fwh-demo-notes'].forEach((k) => { try { localStorage.removeItem(k); } catch { /* ignore */ } });
+        loadDemoData();
+        UI.toast('The demo was updated with the latest sample data: finance, agents & operations, projects, chat and notes.', 'info', { duration: 8000 });
       }
     }
     Cloud.onStatus(() => renderFoot());

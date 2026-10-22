@@ -196,21 +196,29 @@ const Sample = (() => {
     pt(onboard, 3, 'Two-week check-in', { ownerId: me.id, due: day(32), contactId: maria.id });
     void site;
 
-    // Corporate finance: accounts, five months of movements, subscriptions, budget and cap table
+    // Corporate finance: accounts, six months of movements, subscriptions, budget, month-end close and cap table
     d.settings.finance = { ...d.settings.finance, baseCurrency: 'COP', usdRate: 4000, agents: 8 };
-    const bank = mk('accounts', { name: 'Operating account', type: 'Bank account', currency: 'COP', institution: 'Demo Bank', last4: '4821', openingBalance: 0, openingDate: day(-150) }, -150);
-    const usd = mk('accounts', { name: 'USD account', type: 'Bank account', currency: 'USD', institution: 'Demo USD Bank', last4: '0093', openingBalance: 0, openingDate: day(-150) }, -150);
-    const card = mk('accounts', { name: 'Company card', type: 'Credit card', currency: 'COP', institution: 'Demo Bank', last4: '7710', openingBalance: 0, openingDate: day(-150) }, -150);
+    const bank = mk('accounts', { name: 'Operating account', type: 'Bank account', currency: 'COP', institution: 'Demo Bank', last4: '4821', openingBalance: 0, openingDate: day(-180) }, -180);
+    const usd = mk('accounts', { name: 'USD account', type: 'Bank account', currency: 'USD', institution: 'Demo USD Bank', last4: '0093', openingBalance: 0, openingDate: day(-180) }, -180);
+    const card = mk('accounts', { name: 'Company card', type: 'Credit card', currency: 'COP', institution: 'Demo Bank', last4: '7710', openingBalance: 0, openingDate: day(-180) }, -180);
     const txn = (n, description, category, amount, accountId, extra = {}) => mk('transactions', { date: day(n), description, category, amount, accountId, status: 'Cleared', ...extra }, n);
-    [me, jordan, taylor].forEach((u) => txn(-148, `Capital contribution · ${u.name}`, 'fin-capital', 40000000, bank.id, { contributorId: u.id }));
+    [me, jordan, taylor].forEach((u) => txn(-178, `Capital contribution · ${u.name}`, 'fin-capital', 40000000, bank.id, { contributorId: u.id }));
     txn(-120, 'Pre-seed SAFE · Pinecrest Capital', 'fin-investment', 50000, usd.id, { orgId: pinecrest.id, fxRate: 4100 });
-    txn(-140, 'Incorporation (S.A.S.) and notary', 'opex-legal', 6200000, bank.id, { invoiceRef: 'N-2231' });
+    txn(-170, 'Incorporation (S.A.S.) and notary', 'opex-legal', 6200000, bank.id, { invoiceRef: 'N-2231' });
     txn(-60, 'Transfer USD to operating account', '', 15000, usd.id, { kind: 'transfer', toAccountId: bank.id, toAmount: 59250000 });
     const monthDay = (back, dd) => { const x = new Date(); x.setDate(1); x.setMonth(x.getMonth() - back); x.setDate(dd); return U.toDateStr(x); };
-    for (let back = 4; back >= 0; back--) {
+    for (let back = 5; back >= 0; back--) {
       const at5 = monthDay(back, 5);
+      const at10 = monthDay(back, 10);
       const at25 = monthDay(back, 25);
+      const at28 = monthDay(back, 28);
       const days = (s) => U.daysFromToday(s);
+      if (days(at10) <= 0) {
+        txn(days(at10), 'Accountant · monthly fee', 'opex-legal', 900000, bank.id, { invoiceRef: `AC-${6 - back}` });
+        if (back <= 2) txn(days(at10), 'Endpoint security & backups (8 seats)', 'cogs-infra', 72, usd.id);
+        if (back <= 2) txn(days(at10), 'Internet & telephony for agents', 'cogs-infra', 650000, card.id);
+      }
+      if (days(at28) <= 0) txn(days(at28), 'Bank fees', 'opex-bank', 38000, bank.id);
       if (days(at5) <= 0) {
         txn(days(at5), 'Coworking membership', 'opex-office', 2500000, card.id);
         txn(days(at5), 'Google Workspace', 'opex-software', 420000, card.id);
@@ -222,6 +230,15 @@ const Sample = (() => {
         txn(days(at25), 'LinkedIn ads', 'opex-marketing', back <= 1 ? 3000000 : 1500000, card.id);
       }
     }
+    txn(-100, 'Website build · freelance developer', 'opex-contractors', 3500000, bank.id, { invoiceRef: 'FV-118' });
+    txn(-75, 'Password manager · annual plan', 'opex-software', 480, usd.id);
+    txn(-70, 'Trip to Bogotá · client visits', 'opex-travel', 1200000, card.id);
+    txn(-45, 'Industry & commerce tax (ICA)', 'opex-taxes', 450000, bank.id);
+    txn(-40, 'Headsets for 4 agents', 'opex-office', 1600000, card.id, { paidBy: me.id, reimbursed: true, notes: 'Paid personally, reimbursed with the next payroll.' });
+    txn(-12, `Paid diagnostic · ${north.name}`, 'rev-services', 1500, usd.id, { orgId: north.id, invoiceRef: 'INV-US-001', fxRate: 4050 });
+    txn(-2, `Monthly service · ${bright.name} (invoice sent, awaiting payment)`, 'rev-services', 18000000, bank.id, { status: 'Pending', orgId: bright.id, invoiceRef: 'INV-006' });
+    txn(U.daysFromToday(monthDay(0, 25)) > 0 ? U.daysFromToday(monthDay(0, 25)) : 3, 'Payroll', 'opex-payroll', 24000000, bank.id, { status: 'Planned' });
+    txn(Math.max(5, U.daysFromToday(monthDay(-1, 10))), 'Accountant · monthly fee', 'opex-legal', 900000, bank.id, { status: 'Planned' });
     txn(-9, 'Laptop for operations', 'opex-office', 4300000, card.id, { paidBy: taylor.id, notes: 'Bought with a personal card; reimburse next payroll.' });
     txn(-4, 'Client lunch · Brightwater', 'opex-travel', 380000, card.id, { paidBy: jordan.id, orgId: bright.id });
     txn(12, `Second location kickoff · ${bright.name}`, 'rev-services', 9000000, bank.id, { status: 'Planned', orgId: bright.id });
@@ -246,7 +263,8 @@ const Sample = (() => {
     ag('Daniela Vargas', { operationId: opNs.id, status: 'Recruiting', startDate: '', licenses: [] });
     ag('Felipe Ortiz', { operationId: opBw.id, status: 'Offboarded', startDate: day(-120), endDate: day(-4), licenses: [subCc.id, subGw.id] });
 
-    [['rev-services', 25000000], ['cogs-licenses', 4000000], ['opex-payroll', 24000000], ['opex-office', 3000000], ['opex-software', 600000], ['opex-marketing', 2000000], ['opex-travel', 500000]]
+    d.settings.finance.close = { [U.today().slice(0, 7)]: ['reconcile', 'categorize', 'subs'] };
+    [['opex-legal', 1000000], ['opex-bank', 50000], ['cogs-infra', 1200000], ['opex-taxes', 500000], ['rev-services', 25000000], ['cogs-licenses', 4000000], ['opex-payroll', 24000000], ['opex-office', 3000000], ['opex-software', 600000], ['opex-marketing', 2000000], ['opex-travel', 500000]]
       .forEach(([category, monthly]) => mk('budgets', { category, monthly }));
     [me, jordan, taylor].forEach((u) => mk('shareholders', { personId: u.id, shareClass: 'Common (founders)', shares: 3000000, vestingStart: day(-150), vestingMonths: 48, cliffMonths: 12 }));
     mk('shareholders', { name: 'Option pool (unallocated)', shareClass: 'Options pool', shares: 1000000, notes: 'Reserved for key hires' });
@@ -255,5 +273,7 @@ const Sample = (() => {
     return d;
   }
 
-  return { build };
+  // Bump when the sample data gains new sections, so existing demos refresh themselves
+  const VERSION = 5;
+  return { build, VERSION };
 })();
