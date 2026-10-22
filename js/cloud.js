@@ -78,7 +78,7 @@ const Cloud = (() => {
     } catch (e) {
       console.error('Sync failed', e);
       batch.forEach(([k, x]) => { if (!dirty.has(k)) dirty.set(k, x); });
-      setStatus('error', /crm_records_collection_check/.test(e.message || '') ? 'New features need a database upgrade: an admin runs supabase/upgrade-01.sql in the Supabase SQL Editor.' : (e.message || String(e)));
+      setStatus('error', /crm_records_collection_check/.test(e.message || '') ? 'New features need a database upgrade: an admin runs supabase/upgrade-03.sql (and 01/02 if not done) in the Supabase SQL Editor.' : (e.message || String(e)));
       clearTimeout(retryTimer);
       retryTimer = setTimeout(flush, 5000);
     } finally {

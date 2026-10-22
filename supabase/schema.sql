@@ -80,19 +80,15 @@ create trigger crm_members_keep_admin before update or delete on public.crm_memb
 --    in the JSONB "data" column, so the product can evolve without migrations.
 create table if not exists public.crm_records (
   id          text primary key,
-  collection  text not null check (collection in (
-                'settings', 'users', 'tags', 'organizations', 'contacts', 'deals',
-                'activities', 'tasks', 'meetings', 'resolutions',
-                'projects', 'accounts', 'transactions', 'subscriptions', 'budgets', 'shareholders')),
+  collection  text not null check (collection ~ '^[a-z][a-z_]{1,39}$'),
   data        jsonb not null,
   created_at  timestamptz not null default now(),
   updated_at  timestamptz not null default now(),
   updated_by  uuid default auth.uid()
 );
 alter table public.crm_records drop constraint if exists crm_records_collection_check;
-alter table public.crm_records add constraint crm_records_collection_check check (collection in (
-  'settings', 'users', 'tags', 'organizations', 'contacts', 'deals', 'activities', 'tasks', 'meetings', 'resolutions',
-  'projects', 'accounts', 'transactions', 'subscriptions', 'budgets', 'shareholders'));
+-- any lowercase record type (settings, contacts, tasks, agents…); RLS below controls access
+alter table public.crm_records add constraint crm_records_collection_check check (collection ~ '^[a-z][a-z_]{1,39}$');
 create index if not exists crm_records_collection_idx on public.crm_records (collection);
 create index if not exists crm_records_data_gin_idx on public.crm_records using gin (data jsonb_path_ops);
 

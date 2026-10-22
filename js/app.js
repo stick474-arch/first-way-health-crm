@@ -14,6 +14,7 @@ const App = (() => {
     { id: 'pipeline', label: 'Pipeline', icon: 'kanban' },
     { id: 'activities', label: 'Activity log', icon: 'activity' },
     { id: 'tasks', label: 'Tasks & projects', icon: 'checkSquare' },
+    { id: 'ops', label: 'Agents & operations', icon: 'userCheck' },
     { id: 'chat', label: 'Team chat', icon: 'message' },
     { id: 'notes', label: 'My notes', icon: 'note' },
     { sep: 'Governance' },
@@ -30,7 +31,7 @@ const App = (() => {
     const boardOpen = open.filter((t) => t.kind === 'Board action').length;
     const chatUnread = Chat.unreadTotal();
     const inboxNew = Work.unseen();
-    const counts = { chat: chatUnread ? `<span class="nav-count hot" title="Unread messages">${chatUnread}</span>` : '', tasks: due || inboxNew ? `<span class="nav-count hot" title="Overdue or due today, plus new in your inbox">${due + inboxNew}</span>` : '', notes: Notes.dueCount() ? `<span class="nav-count hot" title="Note reminders due">${Notes.dueCount()}</span>` : '', board: boardOpen ? `<span class="nav-count" title="Open board action items">${boardOpen}</span>` : '' };
+    const counts = { chat: chatUnread ? `<span class="nav-count hot" title="Unread messages">${chatUnread}</span>` : '', tasks: due || inboxNew ? `<span class="nav-count hot" title="Overdue or due today, plus new in your inbox">${due + inboxNew}</span>` : '', ops: (() => { const n = S.all('agents').filter((a) => !['Onboarding', 'Active', 'On leave'].includes(a.status) && (a.licenses || []).length).length; return n ? `<span class="nav-count hot" title="Former agents still holding licenses">${n}</span>` : ''; })(), notes: Notes.dueCount() ? `<span class="nav-count hot" title="Note reminders due">${Notes.dueCount()}</span>` : '', board: boardOpen ? `<span class="nav-count" title="Open board action items">${boardOpen}</span>` : '' };
     $('#nav').innerHTML = NAV.map((n) => (n.sep !== undefined
       ? `<div class="nav-sep">${esc(n.sep)}</div>`
       : `<a href="#/${n.id}" class="nav-item ${current.name === n.id ? 'active' : ''}" ${current.name === n.id ? 'aria-current="page"' : ''}>${UI.icon(n.icon)}<span>${esc(n.label)}</span>${counts[n.id] || ''}</a>`)).join('');
@@ -213,7 +214,7 @@ const App = (() => {
 
   // ---- Roles: viewers get a read-only UI (the database enforces it too) -------------------
   const WRITE_ACTS = new Set(['logActivity', 'toggleTask', 'moveDeal', 'contactMore', 'setAtt', 'attAll', 'agAdd', 'agDelete', 'agMove',
-    'minutesDraft', 'mtgStatus', 'startInaugural', 'removeSample', 'composeEmail', 'makeMain', 'suggestCommittees', 'testBoardEmail', 'saveEmailCfg', 'clearEmailCfg', 'saveLists', 'recordCharge', 'loadSample', 'eraseAll', 'removeMember']);
+    'minutesDraft', 'mtgStatus', 'startInaugural', 'removeSample', 'composeEmail', 'makeMain', 'suggestCommittees', 'testBoardEmail', 'saveEmailCfg', 'clearEmailCfg', 'saveLists', 'recordCharge', 'opsToggleLic', 'opsRevokeAll', 'loadSample', 'eraseAll', 'removeMember']);
   const isWriteAction = (act) => /^(new|edit)/.test(act) || WRITE_ACTS.has(act);
 
   function lockViewForViewers() {

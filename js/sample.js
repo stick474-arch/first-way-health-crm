@@ -225,11 +225,27 @@ const Sample = (() => {
     txn(-9, 'Laptop for operations', 'opex-office', 4300000, card.id, { paidBy: taylor.id, notes: 'Bought with a personal card; reimburse next payroll.' });
     txn(-4, 'Client lunch · Brightwater', 'opex-travel', 380000, card.id, { paidBy: jordan.id, orgId: bright.id });
     txn(12, `Second location kickoff · ${bright.name}`, 'rev-services', 9000000, bank.id, { status: 'Planned', orgId: bright.id });
-    mk('subscriptions', { name: 'Contact-center agent license', need: 'Business need', category: 'cogs-licenses', cadence: 'Per seat / month', seats: 8, amount: 110, currency: 'USD', nextDate: monthDay(-1, 5), accountId: usd.id, ownerId: taylor.id, status: 'Active' });
-    mk('subscriptions', { name: 'Google Workspace', need: 'Business need', category: 'opex-software', cadence: 'Per seat / month', seats: 6, amount: 70000, currency: 'COP', nextDate: monthDay(-1, 5), accountId: card.id, ownerId: me.id, status: 'Active' });
-    mk('subscriptions', { name: 'Endpoint security & backups', need: 'Risk & compliance', category: 'cogs-infra', cadence: 'Per seat / month', seats: 8, amount: 9, currency: 'USD', nextDate: monthDay(-1, 10), accountId: usd.id, ownerId: taylor.id, status: 'Active', notes: 'Required by client contracts.' });
-    mk('subscriptions', { name: 'Password manager', need: 'Risk & compliance', category: 'opex-software', cadence: 'Annual', amount: 480, currency: 'USD', nextDate: day(20), accountId: usd.id, ownerId: taylor.id, status: 'Active' });
+    const subCc = mk('subscriptions', { name: 'Contact-center agent license', need: 'Business need', category: 'cogs-licenses', cadence: 'Per seat / month', seats: 8, amount: 110, currency: 'USD', nextDate: monthDay(-1, 5), accountId: usd.id, ownerId: taylor.id, status: 'Active' });
+    const subGw = mk('subscriptions', { name: 'Google Workspace', need: 'Business need', category: 'opex-software', cadence: 'Per seat / month', seats: 6, amount: 70000, currency: 'COP', nextDate: monthDay(-1, 5), accountId: card.id, ownerId: me.id, status: 'Active' });
+    const subSec = mk('subscriptions', { name: 'Endpoint security & backups', need: 'Risk & compliance', category: 'cogs-infra', cadence: 'Per seat / month', seats: 8, amount: 9, currency: 'USD', nextDate: monthDay(-1, 10), accountId: usd.id, ownerId: taylor.id, status: 'Active', notes: 'Required by client contracts.' });
+    const subPw = mk('subscriptions', { name: 'Password manager', need: 'Risk & compliance', category: 'opex-software', cadence: 'Annual', amount: 480, currency: 'USD', nextDate: day(20), accountId: usd.id, ownerId: taylor.id, status: 'Active' });
+    mk('subscriptions', { name: 'QA scoring tool', need: 'Business need', category: 'cogs-licenses', cadence: 'Per seat / month', seats: 2, amount: 25, currency: 'USD', nextDate: monthDay(-1, 5), accountId: usd.id, ownerId: taylor.id, status: 'Active' });
     mk('subscriptions', { name: 'Design tool', need: 'Nice to have', category: 'opex-software', cadence: 'Monthly', amount: 15, currency: 'USD', nextDate: day(8), accountId: card.id, ownerId: jordan.id, status: 'Trial' });
+    // Agents & operations
+    const subQa = d.subscriptions.find((s) => s.name === 'QA scoring tool');
+    d.settings.ops = { kits: { Agent: [subCc.id, subGw.id, subSec.id], 'Team lead': [subCc.id, subGw.id, subSec.id, subPw.id], 'QA analyst': [subGw.id, subSec.id, subQa.id], Supervisor: [subGw.id, subSec.id, subPw.id], Trainer: [subGw.id, subSec.id] } };
+    const opBw = mk('operations', { name: 'Brightwater · patient line', orgId: bright.id, status: 'Live', ownerId: taylor.id, startDate: day(-60), plannedAgents: 6, ratePerAgent: 1150, currency: 'USD', hours: 'Mon–Fri 7am–7pm CT', requiredLicenses: [], slaAnswer: '80% in 30 s', slaAht: '6 min', slaCsat: 'CSAT ≥ 90%', notes: 'Second location adds 2 agents next month.' }, -60);
+    const opNs = mk('operations', { name: 'Northside · benefits helpdesk (pilot)', orgId: north.id, status: 'Ramp-up', ownerId: jordan.id, startDate: day(14), plannedAgents: 3, ratePerAgent: 1050, currency: 'USD', requiredLicenses: [subPw.id], slaAnswer: '90% in 60 s' }, -10);
+    const ag = (name, extra) => mk('agents', { name, email: `${name.split(' ')[0].toLowerCase()}@aetherium.example`, role: 'Agent', status: 'Active', shift: 'Morning', location: 'Remote', employment: 'Employee', languages: 'Spanish, English B2', monthlyCost: 2600000, currency: 'COP', startDate: day(-55), licenses: [subCc.id, subGw.id, subSec.id], ...extra }, -50);
+    ag('Valentina Ríos', { operationId: opBw.id, role: 'Team lead', monthlyCost: 3400000, licenses: [subCc.id, subGw.id, subSec.id, subPw.id], languages: 'Spanish, English C1' });
+    ag('Andrés Molina', { operationId: opBw.id });
+    ag('Camila Herrera', { operationId: opBw.id, shift: 'Afternoon' });
+    ag('Santiago Pardo', { operationId: opBw.id, shift: 'Afternoon', licenses: [subCc.id, subGw.id] });
+    ag('Laura Gómez', { operationId: opBw.id, role: 'QA analyst', monthlyCost: 3000000, licenses: [subGw.id, subSec.id, subQa.id] });
+    ag('Mateo Cárdenas', { operationId: opNs.id, status: 'Onboarding', startDate: day(10), licenses: [] });
+    ag('Daniela Vargas', { operationId: opNs.id, status: 'Recruiting', startDate: '', licenses: [] });
+    ag('Felipe Ortiz', { operationId: opBw.id, status: 'Offboarded', startDate: day(-120), endDate: day(-4), licenses: [subCc.id, subGw.id] });
+
     [['rev-services', 25000000], ['cogs-licenses', 4000000], ['opex-payroll', 24000000], ['opex-office', 3000000], ['opex-software', 600000], ['opex-marketing', 2000000], ['opex-travel', 500000]]
       .forEach(([category, monthly]) => mk('budgets', { category, monthly }));
     [me, jordan, taylor].forEach((u) => mk('shareholders', { personId: u.id, shareClass: 'Common (founders)', shares: 3000000, vestingStart: day(-150), vestingMonths: 48, cliffMonths: 12 }));

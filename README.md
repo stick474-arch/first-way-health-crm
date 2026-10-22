@@ -56,6 +56,8 @@ Sources: [Ask HN: For your startup, do you use a CRM?](https://news.ycombinator.
 
 **My notes (Google Keep-style)** — private notes and checklists in colored cards, pinned on top, labels, reminders, archive, trash (7 days), search, grid or list, drag to reorder, images by link, share with a teammate, send to chat or turn into a task.
 
+**Agents & operations** — agent roster (role, shift, status, cost), client operations (planned vs active agents, billing rate, SLA targets, monthly margin), license kits per role split into business need vs risk & compliance, a license assignment matrix with missing licenses, seat utilization (unused seats and shortfalls), onboarding checklists and offboarding revoke tasks, and a license-plan CSV for the board.
+
 **Corporate finance** — accounts (COP/USD), one ledger mapped to a startup chart of accounts, transfers, founder reimbursables, P&L, burn and runway, subscriptions & licenses with cost per agent, budget vs actual, cap table with vesting, month-end close.
 
 **Board of Directors** — overview with alerts (terms ending in 120 days, overdue action items, no meeting scheduled, board pack due); members; meetings (agenda editor, attendance & quorum, auto-saving minutes, "draft from agenda", printable minutes with signature lines); resolution register with numbering `R-YYYY-NNN`; action items.
@@ -107,7 +109,7 @@ Notes: Supabase's built-in email sender is rate-limited (fine for a few users; c
 
 ### Team chat and email
 
-- **Team chat**: run [`supabase/chat.sql`](supabase/chat.sql) once in the SQL Editor, then the upgrades in order: [`upgrade-01.sql`](supabase/upgrade-01.sql) (projects, finance, custom channels) and [`upgrade-02.sql`](supabase/upgrade-02.sql) (threads, reactions, pins, polls, edits, private channels and private notes). Demo and local mode keep messages and notes in the browser.
+- **Team chat**: run [`supabase/chat.sql`](supabase/chat.sql) once in the SQL Editor, then the upgrades in order: [`upgrade-01.sql`](supabase/upgrade-01.sql) (projects, finance, custom channels) [`upgrade-02.sql`](supabase/upgrade-02.sql) (threads, reactions, pins, polls, edits, private channels and private notes) and [`upgrade-03.sql`](supabase/upgrade-03.sql) (agents & operations; after it, new record types need no SQL). Demo and local mode keep messages and notes in the browser.
 - **Email**: "Send email" on a contact and "Email board" on a meeting open a ready-to-send message (templates for follow-ups, meeting requests, proposals, agendas and minutes) in Gmail, Outlook or the default mail app, log it in the history and can set a follow-up reminder. Sending directly from the app needs an email service (e.g. Resend) and a domain of your own.
 
 ### How sync works

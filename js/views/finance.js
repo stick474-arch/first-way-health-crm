@@ -237,7 +237,8 @@ Views.finance = (() => {
   function subscriptions(root) {
     const subs = S.all('subscriptions');
     const active = subs.filter((s) => s.status !== 'Cancelled');
-    const agents = Number(Fin.cfg().agents) || 0;
+    const agents = Fin.agentCount();
+    const fromRoster = S.all('agents').some((a) => a.status === 'Active');
     const perAgent = Fin.perAgent();
     const byNeed = NEEDS.map((n) => ({ n, list: U.sortBy(subs.filter((s) => (s.need || 'Business need') === n), (s) => `${s.status === 'Cancelled' ? 1 : 0}${s.name.toLowerCase()}`) }));
     const needTotal = (list) => list.filter((s) => s.status !== 'Cancelled').reduce((t, s) => t + Fin.subMonthly(s), 0);
@@ -247,7 +248,7 @@ Views.finance = (() => {
       <div class="kpis">
         <div class="card kpi"><span class="kpi-label">${UI.icon('list')}Committed monthly</span><span class="kpi-value">${money(Fin.committedMonthly(), { compact: true })}</span><span class="kpi-sub">${U.plural(active.length, 'active subscription')}</span></div>
         <div class="card kpi"><span class="kpi-label">${UI.icon('calendar')}Per year</span><span class="kpi-value">${money(Fin.committedMonthly() * 12, { compact: true })}</span><span class="kpi-sub">at today’s seats and rate</span></div>
-        <div class="card kpi"><span class="kpi-label">${UI.icon('users')}Delivery licenses per agent</span><span class="kpi-value">${perAgent != null ? money(perAgent, { compact: true }) : '—'}</span><span class="kpi-sub">${agents ? `${U.plural(agents, 'agent')} · <a href="#" data-act="editFinanceSettings">change</a>` : '<a href="#" data-act="editFinanceSettings">set the number of agents</a>'}</span></div>
+        <div class="card kpi"><span class="kpi-label">${UI.icon('users')}Delivery licenses per agent</span><span class="kpi-value">${perAgent != null ? money(perAgent, { compact: true }) : '—'}</span><span class="kpi-sub">${agents ? `${U.plural(agents, 'active agent')} · ${fromRoster ? '<a href="#/ops">from the roster</a>' : '<a href="#" data-act="editFinanceSettings">change</a>'}` : '<a href="#/ops/agents">add your agents</a>'}</span></div>
         <div class="card kpi"><span class="kpi-label">${UI.icon('shield')}Risk & compliance</span><span class="kpi-value">${money(needTotal(byNeed[1].list), { compact: true })}</span><span class="kpi-sub">per month, non-negotiable</span></div>
       </div>
       <div class="row wrap" style="margin-bottom:12px;gap:8px"><button class="btn btn-primary" data-act="newSubscription">${UI.icon('plus')}New subscription or license</button><button class="btn" data-act="exportSubscriptions">${UI.icon('download')}Export for the license presentation</button></div>
@@ -545,7 +546,7 @@ Views.finance = (() => {
     ]), 'text/csv');
   }
   function exportSubscriptions() {
-    const agents = Number(Fin.cfg().agents) || 0;
+    const agents = Fin.agentCount();
     U.download(`aetherium-licenses-${U.today()}.csv`, U.toCSV(U.sortBy(S.all('subscriptions'), (s) => `${NEEDS.indexOf(s.need || 'Business need')}${s.name}`), [
       { label: 'Need', get: (s) => s.need || 'Business need' }, { label: 'Name', get: (s) => s.name }, { label: 'Vendor', get: (s) => S.orgName(s.orgId) },
       { label: 'Category', get: (s) => catName(s.category) }, { label: 'Billing', get: (s) => s.cadence }, { label: 'Seats', get: (s) => (s.cadence === 'Per seat / month' ? s.seats || 1 : '') },

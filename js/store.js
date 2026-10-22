@@ -144,10 +144,21 @@ const Store = (() => {
   const SUB_CADENCE = ['Monthly', 'Annual', 'Per seat / month'];
   const SHARE_CLASSES = ['Common (founders)', 'Options pool', 'SAFE / convertible', 'Preferred'];
 
+  // ---- Agents & operations ----------------------------------------------------------------
+  // An operation is a client program (e.g. a client's patient line) staffed by agents; each role
+  // has a license kit, and an operation can require extra licenses on top of it.
+  const AGENT_ROLES = ['Agent', 'Team lead', 'QA analyst', 'Supervisor', 'Trainer'];
+  const AGENT_STATUS = ['Recruiting', 'Onboarding', 'Active', 'On leave', 'Offboarded'];
+  const AGENT_SHIFTS = ['Morning', 'Afternoon', 'Night', 'Weekend', 'Flexible'];
+  const WORK_LOCATIONS = ['Remote', 'Office', 'Hybrid'];
+  const EMPLOYMENT = ['Employee', 'Contractor'];
+  const OPS_STATUS = ['Planning', 'Ramp-up', 'Live', 'Paused', 'Closed'];
+
   const PREFIX = {
     users: 'usr', tags: 'tag', organizations: 'org', contacts: 'con', deals: 'deal',
     activities: 'act', tasks: 'task', meetings: 'mtg', resolutions: 'res',
     projects: 'prj', accounts: 'acc', transactions: 'txn', subscriptions: 'sub', budgets: 'bud', shareholders: 'shr',
+    agents: 'agt', operations: 'ops',
   };
   const COLLECTIONS = Object.keys(PREFIX);
 
@@ -168,16 +179,18 @@ const Store = (() => {
       email: { serviceId: '', templateId: '', publicKey: '' }, // optional direct sending (EmailJS)
       notify: { assign: true, comment: false },
       finance: { baseCurrency: 'COP', usdRate: 4000, agents: 0 },
+      ops: { kits: {} }, // role → required subscription ids
     },
     users: [], tags: [], organizations: [], contacts: [], deals: [], activities: [], tasks: [], meetings: [], resolutions: [],
     projects: [], accounts: [], transactions: [], subscriptions: [], budgets: [], shareholders: [],
+    agents: [], operations: [],
   });
 
   function migrate(d) {
     const base = defaults();
     const out = { ...base, ...d, settings: { ...base.settings, ...(d.settings || {}) } };
     out.settings.cadence = { ...base.settings.cadence, ...((d.settings || {}).cadence || {}) };
-    ['email', 'notify', 'finance'].forEach((k) => { out.settings[k] = { ...base.settings[k], ...((d.settings || {})[k] || {}) }; });
+    ['email', 'notify', 'finance', 'ops'].forEach((k) => { out.settings[k] = { ...base.settings[k], ...((d.settings || {})[k] || {}) }; });
     if (!Array.isArray(out.settings.channels)) out.settings.channels = [];
     COLLECTIONS.forEach((c) => { if (!Array.isArray(out[c])) out[c] = []; });
     if (out.settings.companyName === 'First Way Health') out.settings.companyName = 'Aetherium';
@@ -599,7 +612,7 @@ const Store = (() => {
   return {
     GROUPS, CONTACT_TYPES, ORG_TYPES, ORG_COLORS, ORG_SIZES, PRIORITIES, STAGES, LOST_REASONS, ACTIVITY_TYPES, TASK_KINDS, TASK_REPEAT,
     TASK_PRIORITIES, BOARD_ROLES, MEETING_TYPES, MEETING_STATUS, AGENDA_KINDS, RESOLUTION_STATUS, RESOLUTION_METHODS,
-    STANDARD_AGENDA, SUGGESTED_COMMITTEES, INAUGURAL_AGENDA, PROJECT_COLORS, PROJECT_STATUS, PROJECT_TEMPLATES, FIN_GROUPS, FIN_CATEGORIES, ACCOUNT_TYPES, CURRENCIES, TXN_STATUS, SUB_CADENCE, SHARE_CLASSES, INAUGURAL_RESOLUTIONS, TAG_COLORS, COLLECTIONS, PREFIX,
+    STANDARD_AGENDA, SUGGESTED_COMMITTEES, INAUGURAL_AGENDA, PROJECT_COLORS, PROJECT_STATUS, PROJECT_TEMPLATES, AGENT_ROLES, AGENT_STATUS, AGENT_SHIFTS, WORK_LOCATIONS, EMPLOYMENT, OPS_STATUS, FIN_GROUPS, FIN_CATEGORIES, ACCOUNT_TYPES, CURRENCIES, TXN_STATUS, SUB_CADENCE, SHARE_CLASSES, INAUGURAL_RESOLUTIONS, TAG_COLORS, COLLECTIONS, PREFIX,
     get settings() { return db.settings; },
     get firstRun() { return firstRun; },
     set firstRun(v) { firstRun = v; },

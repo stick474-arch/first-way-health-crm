@@ -119,8 +119,9 @@ const Fin = (() => {
   }
   const subsActive = () => S.all('subscriptions').filter((s) => s.status !== 'Cancelled');
   const committedMonthly = () => subsActive().reduce((t, s) => t + subMonthly(s), 0);
+  const agentCount = () => S.all('agents').filter((a) => a.status === 'Active').length || Number(cfg().agents) || 0;
   const perAgent = () => {
-    const agents = Number(cfg().agents) || 0;
+    const agents = agentCount();
     const delivery = subsActive().filter((s) => s.category === 'cogs-licenses').reduce((t, s) => t + subMonthly(s), 0);
     return agents ? delivery / agents : null;
   };
@@ -161,6 +162,6 @@ const Fin = (() => {
 
   return {
     cfg, base, cat, group, toBase, convert, fmt, signed, baseAmount, balance, cash, pl, burn, runway, monthsBack, monthLabel, monthKey,
-    subMonthly, committedMonthly, perAgent, upcoming, subPeriodAmount, nextDateAfter, owedToFounders, contributions, vested, budgetFor, kindOf, curOf, active,
+    subMonthly, committedMonthly, perAgent, agentCount, upcoming, subPeriodAmount, nextDateAfter, owedToFounders, contributions, vested, budgetFor, kindOf, curOf, active,
   };
 })();
