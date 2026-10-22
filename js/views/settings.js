@@ -178,8 +178,9 @@ Views.settings = (() => {
         const text = await t.files[0].text();
         t.value = '';
         try {
-          const { added, skipped } = S.mergeJSON(text);
+          const { added, skipped, updated } = S.mergeJSON(text);
           const parts = Object.entries(added).map(([c, n]) => `${n} ${c}`);
+          if (updated) parts.push(`updated ${updated} existing`);
           UI.toast(parts.length ? `Added ${parts.join(', ')}${skipped.length ? ` · linked to existing: ${skipped.join(', ')}` : ''}` : (skipped.length ? `Linked to existing: ${skipped.join(', ')}` : 'Nothing new in that file'), parts.length ? 'success' : 'info', { duration: 8000 });
         } catch (err) { UI.toast(err.message || 'That file could not be read', 'error'); }
       }

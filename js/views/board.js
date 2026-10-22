@@ -3,7 +3,7 @@ Views.board = (() => {
   const S = Store;
   const esc = U.esc;
   const state = { resMeeting: '', resStatus: '', resYear: '', actView: 'open', showFormer: false };
-  const TABS = [['overview', 'Overview'], ['members', 'Members'], ['meetings', 'Meetings'], ['resolutions', 'Resolutions'], ['actions', 'Action items']];
+  const TABS = [['overview', 'Overview'], ['members', 'Members'], ['meetings', 'Meetings'], ['resolutions', 'Resolutions'], ['actions', 'Action items'], ['committees', 'Committees']];
   const STATUS_COLORS = { Scheduled: 'blue', Held: 'amber', 'Minutes approved': 'green', Cancelled: 'slate', Proposed: 'blue', Approved: 'green', Rejected: 'red', Tabled: 'amber', Withdrawn: 'slate' };
 
   const boardTasks = () => S.all('tasks').filter((t) => t.kind === 'Board action');
@@ -447,6 +447,9 @@ Views.board = (() => {
     else if (tab === 'meetings') meetings(root);
     else if (tab === 'resolutions') resolutions(root);
     else if (tab === 'actions') actionItems(root);
+    else if (tab === 'committees' && id) Committees.detail(root, id, tabs('committees'));
+    else if (tab === 'committees') Committees.list(root, tabs('committees'), head);
+    else if (tab === 'docs' && id) Committees.doc(root, id, tabs('committees'));
     else overview(root);
   }
 
@@ -460,6 +463,7 @@ Views.board = (() => {
   return {
     render,
     actions: {
+      ...Committees.actions,
       setActView: (ds) => { state.actView = ds.v; App.rerender(); },
       openMeetingTasks: (ds) => Views.tasks.showMeeting(ds.m),
       startInaugural: () => {

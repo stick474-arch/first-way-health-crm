@@ -60,6 +60,10 @@ Sources: [Ask HN: For your startup, do you use a CRM?](https://news.ycombinator.
 
 **Corporate finance** — accounts (COP/USD), one ledger mapped to a startup chart of accounts, transfers, founder reimbursables, P&L, burn and runway, subscriptions & licenses with cost per agent, budget vs actual, cap table with vesting, month-end close.
 
+**Committees & documents** — Board → Committees: one page per committee with its purpose, members, main guide (Markdown with tables and clickable checklists), other documents, meetings and tasks.
+
+**Import packages** — Settings → Data → Add from file merges records and can also update existing ones (`updates`: new role, reassigned task) and add committees or chat channels (`settingsAdd`).
+
 **Board of Directors** — overview with alerts (terms ending in 120 days, overdue action items, no meeting scheduled, board pack due); members; meetings (agenda editor, attendance & quorum, auto-saving minutes, "draft from agenda", printable minutes with signature lines); resolution register with numbering `R-YYYY-NNN`; action items.
 
 **Settings** — company name, "you are", team members, tags, lead sources, industries, committees, cadence per contact type, JSON backup/restore, sample data, erase, cloud workspace & team access.

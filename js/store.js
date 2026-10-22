@@ -158,7 +158,7 @@ const Store = (() => {
     users: 'usr', tags: 'tag', organizations: 'org', contacts: 'con', deals: 'deal',
     activities: 'act', tasks: 'task', meetings: 'mtg', resolutions: 'res',
     projects: 'prj', accounts: 'acc', transactions: 'txn', subscriptions: 'sub', budgets: 'bud', shareholders: 'shr',
-    agents: 'agt', operations: 'ops',
+    agents: 'agt', operations: 'ops', docs: 'doc',
   };
   const COLLECTIONS = Object.keys(PREFIX);
 
@@ -180,10 +180,11 @@ const Store = (() => {
       notify: { assign: true, comment: false },
       finance: { baseCurrency: 'COP', usdRate: 4000, agents: 0 },
       ops: { kits: {} }, // role → required subscription ids
+      committeeInfo: {}, // committee name → { purpose }
     },
     users: [], tags: [], organizations: [], contacts: [], deals: [], activities: [], tasks: [], meetings: [], resolutions: [],
     projects: [], accounts: [], transactions: [], subscriptions: [], budgets: [], shareholders: [],
-    agents: [], operations: [],
+    agents: [], operations: [], docs: [],
   });
 
   function migrate(d) {
@@ -560,8 +561,47 @@ const Store = (() => {
         added[c] = (added[c] || 0) + 1;
       }
     }
+    // 3. updates to records that already exist (matched by id, email or title) — e.g. a new role,
+    //    a task reassigned — and additions to workspace lists (committees, chat channels)
+    let updated = 0;
+    const findRec = (u) => {
+      const c = u.collection;
+      let r = u.id ? get(c, idMap[u.id] || u.id) : null;
+      if (!r && u.email && (c === 'users' || c === 'contacts')) r = db[c].find((x) => lower(x.email) === lower(u.email)) || null;
+      if (!r && u.title) r = db[c].find((x) => lower(x.title || x.name) === lower(u.title)) || null;
+      return r;
+    };
+    for (const u of Array.isArray(parsed.updates || d.updates) ? (parsed.updates || d.updates) : []) {
+      if (!u || !COLLECTIONS.includes(u.collection)) continue;
+      const r = findRec(u);
+      if (!r) {
+        if (u.createIfMissing) { const n = remap({ ...u.createIfMissing }); n.id = n.id || U.uid(PREFIX[u.collection]); db[u.collection].push(n); touch(u.collection, n); added[u.collection] = (added[u.collection] || 0) + 1; }
+        continue;
+      }
+      for (const [k, v] of Object.entries(remap(u.set || {}))) {
+        const [a, b] = k.split('.');
+        if (b) r[a] = { ...(r[a] || {}), [b]: v }; else r[a] = v;
+      }
+      for (const [k, v] of Object.entries(remap(u.add || {}))) {
+        const [a, b] = k.split('.');
+        const holder = b ? (r[a] = r[a] || {}) : r;
+        const key = b || a;
+        holder[key] = [...new Set([...(Array.isArray(holder[key]) ? holder[key] : []), ...[].concat(v)])];
+      }
+      if (u.appendNotes && !(r.notes || '').includes(u.appendNotes)) r.notes = [r.notes, u.appendNotes].filter(Boolean).join('\n\n');
+      r.updatedAt = U.now();
+      touch(u.collection, r);
+      updated++;
+    }
+    const sa = parsed.settingsAdd || d.settingsAdd;
+    if (sa && typeof sa === 'object') {
+      if (Array.isArray(sa.committees)) db.settings.committees = [...new Set([...(db.settings.committees || []), ...sa.committees])];
+      if (Array.isArray(sa.channels)) db.settings.channels = [...(db.settings.channels || []), ...sa.channels.filter((ch) => !(db.settings.channels || []).some((x) => x.id === ch.id)).map(remap)];
+      if (sa.committeeInfo) db.settings.committeeInfo = { ...sa.committeeInfo, ...(db.settings.committeeInfo || {}) };
+      if (hooks.record) hooks.record('settings', 'workspace', db.settings);
+    }
     commit();
-    return { added, skipped: [...new Set(matched.filter((m) => m.name).map((m) => m.name))] };
+    return { added, updated, skipped: [...new Set(matched.filter((m) => m.name).map((m) => m.name))] };
   }
 
   function replaceAll(d) {
